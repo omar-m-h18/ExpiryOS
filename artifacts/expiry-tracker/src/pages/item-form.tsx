@@ -170,7 +170,7 @@ export function ItemForm() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>Item Name</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. Passport, Domain Name, Spotify..." {...field} />
                     </FormControl>
@@ -229,16 +229,16 @@ export function ItemForm() {
                 )}
               />
 
-              <div className="flex justify-end pt-4 border-t">
+              <div className="flex flex-col sm:flex-row justify-end pt-4 border-t gap-2">
                 <Button 
                   type="button" 
                   variant="ghost" 
                   onClick={() => setLocation("/items")}
-                  className="mr-2"
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSaving}>
+                <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -24,12 +24,16 @@ export function StatusBadge({ status, daysRemaining }: { status: Status; daysRem
         </Badge>
       );
     case "active":
+      let activeText = "Active";
+      if (daysRemaining !== undefined && daysRemaining !== null) {
+        if (daysRemaining <= 60 && daysRemaining >= 31) {
+          activeText = `${daysRemaining} days left`;
+        }
+      }
       return (
         <Badge variant="active" className="gap-1 px-2 py-0.5 bg-opacity-10 text-[#10b981]">
           <CheckCircle2 className="w-3 h-3" />
-          {daysRemaining !== undefined && daysRemaining !== null
-            ? `${daysRemaining} days left`
-            : "Active"}
+          {activeText}
         </Badge>
       );
     default:

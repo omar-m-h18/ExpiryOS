@@ -1,6 +1,6 @@
 import { useGetItemsSummary, useListItems } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, ArrowRight, CheckCircle2, Clock, ShieldAlert } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle2, Clock, ShieldAlert, List } from "lucide-react";
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
@@ -9,10 +9,25 @@ import { Button } from "@/components/ui/button";
 
 export function Dashboard() {
   const { data: summary, isLoading: isLoadingSummary } = useGetItemsSummary();
-  const { data: expiringSoonItems, isLoading: isLoadingItems } = useListItems({
+  const { data: expiringSoonItems, isLoading: isLoadingExpiring } = useListItems({
     status: "expiring_soon",
     sort: "asc"
   });
+  const { data: expiredItems, isLoading: isLoadingExpired } = useListItems({
+    status: "expired",
+    sort: "desc"
+  });
+
+  const isLoadingItems = isLoadingExpiring || isLoadingExpired;
+
+  const needsAttentionItems = [
+    ...(expiredItems || []).sort((a, b) => (a.days_remaining ?? Infinity) - (b.days_remaining ?? Infinity)),
+    ...(expiringSoonItems || []).sort((a, b) => (a.days_remaining ?? Infinity) - (b.days_remaining ?? Infinity))
+  ].slice(0, 6);
+
+  const viewAllHref = (expiredItems && expiredItems.length > 0) 
+    ? "/items?status=expired" 
+    : "/items?status=expiring_soon";
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -38,14 +53,17 @@ export function Dashboard() {
         </div>
       ) : summary ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-card">
-            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Items</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{summary.total}</div>
-            </CardContent>
-          </Card>
+          <Link href="/items" className="group outline-none">
+            <Card className="hover-elevate cursor-pointer border-l-4 border-l-border transition-all bg-card">
+              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Total Items</CardTitle>
+                <List className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{summary.total}</div>
+              </CardContent>
+            </Card>
+          </Link>
           
           <Link href="/items?status=active" className="group outline-none">
             <Card className="hover-elevate cursor-pointer border-l-4 border-l-[#10b981] transition-all">
@@ -89,7 +107,7 @@ export function Dashboard() {
         <div className="col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-display font-semibold">Needs Attention</h2>
-            <Link href="/items?status=expiring_soon" className="text-sm text-primary hover:underline flex items-center gap-1 font-medium">
+            <Link href={viewAllHref} className="text-sm text-primary hover:underline flex items-center gap-1 font-medium">
               View all <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -102,8 +120,8 @@ export function Dashboard() {
                   <Skeleton className="h-6 w-3/4" />
                   <Skeleton className="h-6 w-5/6" />
                 </div>
-              ) : expiringSoonItems && expiringSoonItems.length > 0 ? (
-                expiringSoonItems.slice(0, 5).map(item => (
+              ) : needsAttentionItems.length > 0 ? (
+                needsAttentionItems.map(item => (
                   <Link key={item.id} href={`/items/${item.id}/edit`} className="block hover:bg-muted/50 transition-colors p-4 group outline-none">
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-1">
@@ -121,7 +139,7 @@ export function Dashboard() {
               ) : (
                 <div className="p-8 text-center flex flex-col items-center justify-center text-muted-foreground">
                   <ShieldAlert className="w-12 h-12 text-muted mb-3" />
-                  <p>No items require immediate attention.</p>
+                  <p>Nothing needs attention right now.</p>
                   <p className="text-sm mt-1">You're all caught up!</p>
                 </div>
               )}

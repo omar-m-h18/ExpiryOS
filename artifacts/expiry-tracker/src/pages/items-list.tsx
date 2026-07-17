@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   useListItems, 
@@ -10,11 +10,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/status-badge";
-import { formatDate } from "@/lib/utils";
+import { formatDate, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Search, ListFilter, Trash2, ArrowUpDown, MoreHorizontal, Inbox } from "lucide-react";
+import { Search, Trash2, Inbox, ArrowUp, ArrowDown } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,9 +28,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function ItemsList() {
-  const [searchParams] = useLocation();
-  // Simple extraction of status from URL since we don't have react-router's useSearchParams
-  // e.g. /items?status=active
+  const [, setLocation] = useLocation();
   const initialStatus = typeof window !== 'undefined' 
     ? new URLSearchParams(window.location.search).get("status") 
     : null;
@@ -79,45 +76,51 @@ export function ItemsList() {
         </Link>
       </div>
 
-      <Card className="p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search items..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-background"
-            />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-[140px] bg-background">
-                <ListFilter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Filter Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="expiring_soon">Expiring Soon</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={sort} onValueChange={(v: any) => setSort(v)}>
-              <SelectTrigger className="w-[140px] bg-background">
-                <ArrowUpDown className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Sort" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="asc">Date (Asc)</SelectItem>
-                <SelectItem value="desc">Date (Desc)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="bg-muted/30 rounded-xl p-3 flex flex-col gap-3">
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search items..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 bg-background w-full"
+          />
         </div>
-      </Card>
+        
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 -mb-1 w-full sm:w-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {[
+              { id: "all", label: "All" },
+              { id: "active", label: "Active" },
+              { id: "expiring_soon", label: "Expiring Soon" },
+              { id: "expired", label: "Expired" }
+            ].map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setStatus(s.id)}
+                className={cn(
+                  "whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors outline-none",
+                  status === s.id 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-muted text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="shrink-0 self-end sm:self-auto"
+            onClick={() => setSort(sort === "asc" ? "desc" : "asc")}
+          >
+            {sort === "asc" ? <ArrowUp className="w-4 h-4 mr-2" /> : <ArrowDown className="w-4 h-4 mr-2" />}
+            <span className="inline">{sort === "asc" ? "Soonest first" : "Latest first"}</span>
+          </Button>
+        </div>
+      </div>
 
       <div className="space-y-3">
         {isLoading ? (
