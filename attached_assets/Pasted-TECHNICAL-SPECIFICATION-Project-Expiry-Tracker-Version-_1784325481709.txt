@@ -1,0 +1,304 @@
+TECHNICAL SPECIFICATION
+Project: Expiry Tracker
+Version: MVP (v1)
+
+========================================
+1. PROJECT OVERVIEW
+========================================
+
+Expiry Tracker is a lightweight, open-source Management Information System (MIS) web application for tracking items with expiration or renewal dates.
+
+The application solves one problem:
+
+"Help users know what has expired, what is expiring soon, and what remains active."
+
+Version 1 intentionally focuses on a minimal, maintainable MVP.
+
+Excluded from v1:
+- Authentication
+- Notifications
+- File uploads
+- Integrations
+- Reports and analytics
+- Team collaboration
+- Roles and permissions
+- Background jobs
+- APIs for third parties
+
+========================================
+2. HIGH-LEVEL ARCHITECTURE
+========================================
+
+The application will be a single monolithic web application.
+
+Architecture:
+
+Browser
+    │
+    ▼
+Frontend (UI)
+    │
+    ▼
+Backend
+    │
+Business Logic
+    │
+    ▼
+Database
+
+Modules
+
+Frontend
+- Home
+- Items List
+- Item Form
+- Search
+- Filters
+
+Backend
+- Item CRUD
+- Validation
+- Status Calculation
+
+Database
+- Items
+
+No microservices.
+No scheduled jobs.
+No queues.
+
+========================================
+3. DATA FLOW
+========================================
+
+Create Item
+
+User
+↓
+Fill Form
+↓
+Frontend Validation
+↓
+Backend Validation
+↓
+Save Item
+↓
+Database
+↓
+Refresh List
+
+----------------------------------------
+
+Load Home
+
+Open Application
+↓
+Retrieve Items
+↓
+Calculate Status
+↓
+Group by Status
+↓
+Display
+
+----------------------------------------
+
+Search
+
+User enters search
+↓
+Filter matching items
+↓
+Display results
+
+----------------------------------------
+
+Edit Item
+
+User edits item
+↓
+Validate
+↓
+Update database
+↓
+Refresh list
+
+========================================
+4. DATABASE DESIGN
+========================================
+
+Table: items
+
+Fields
+
+- id (UUID)
+- title (String)
+- category (String)
+- expiration_date (Date)
+- notes (Text, optional)
+- created_at (Timestamp)
+- updated_at (Timestamp)
+
+Status is NOT stored.
+
+Status is calculated dynamically from:
+
+Current Date
++
+Expiration Date
+
+========================================
+5. STATUS RULES
+========================================
+
+Expired
+Days Remaining < 0
+
+Expiring Soon
+Days Remaining >= 0
+AND
+Days Remaining <= 30
+
+Active
+Days Remaining > 30
+
+========================================
+6. APPLICATION PAGES
+========================================
+
+Home
+- Overview grouped by status
+
+Items
+- List all items
+
+Add Item
+- Create new item
+
+Edit Item
+- Update existing item
+
+========================================
+7. CORE FEATURES
+========================================
+
+- Create item
+- Read items
+- Update item
+- Delete item
+- Automatic status calculation
+- Search
+- Filter by status
+- Sort by expiration date
+
+========================================
+8. VALIDATION RULES
+========================================
+
+Title
+- Required
+
+Expiration Date
+- Required
+- Must be a valid date
+
+Notes
+- Optional
+
+Category
+- Free text
+
+Duplicate items
+- Allowed
+
+========================================
+9. EDGE CASES
+========================================
+
+- Invalid dates
+- Empty title
+- Duplicate entries
+- Expiration today
+- Leap year dates
+- Empty database
+- Empty search results
+- Very old expiration dates
+- Long titles
+- Delete confirmation
+
+Store dates only (not timestamps) to avoid timezone issues.
+
+========================================
+10. TEST MATRIX
+========================================
+
+CRUD
+✓ Create item
+✓ Read item
+✓ Update item
+✓ Delete item
+
+Validation
+✓ Reject empty title
+✓ Reject invalid date
+✓ Accept optional notes
+✓ Accept duplicate titles
+
+Status
+✓ Expired
+✓ Expiring Soon
+✓ Active
+✓ Boundary values
+✓ Expiration today
+
+Search
+✓ Exact match
+✓ Partial match
+✓ Case insensitive
+✓ No results
+✓ Empty search
+
+Filters
+✓ Active
+✓ Expiring Soon
+✓ Expired
+✓ Reset filters
+
+UI
+✓ Empty state
+✓ Large datasets
+✓ Responsive layout
+
+Persistence
+✓ Data remains after refresh
+✓ Updates persist
+✓ Deletions persist
+
+========================================
+11. DEFINITION OF DONE
+========================================
+
+Version 1 is complete when:
+
+- CRUD is fully functional
+- Status calculation is correct
+- Search works
+- Filters work
+- Responsive interface
+- Clean code structure
+- README completed
+- GitHub repository ready
+- Application deployable on Replit Free
+
+No additional features should be added before Version 1 is released.
+
+========================================
+12. ENGINEERING PRINCIPLES
+========================================
+
+- Keep the architecture simple.
+- Prefer calculated values over stored values.
+- Solve one problem well.
+- Avoid feature creep.
+- Build for maintainability.
+- Make the project easy to understand, contribute to, and self-host.

@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Expiry Tracker"
+version = "1.0.0"
+id = "artifacts/expiry-tracker"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23498
+
+[services.development]
+run = "pnpm --filter @workspace/expiry-tracker run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/expiry-tracker", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/expiry-tracker/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23498"
+BASE_PATH = "/"

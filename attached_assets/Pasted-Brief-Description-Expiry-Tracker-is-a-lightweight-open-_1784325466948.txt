@@ -1,0 +1,58 @@
+Brief Description -
+
+Expiry Tracker is a lightweight, open-source Management Information System (MIS) designed to help users efficiently track items with expiration or renewal dates. Users can record essential items like licenses, contracts, certifications, subscriptions, and insurance in one centralized application. The app automatically calculates the status of each item based on its expiration date, allowing users to see which items are active, expiring soon, or expired. By focusing solely on tracking expirations, the MVP remains simple, effective, and easy to use.
+
+Features -
+
+• CRUD Functionality: Enable users to Create, Read, Update, and Delete records for items with expiration dates.
+• Expiry Tracking: Automatically calculate and display the status of items (active, expiring soon, expired) based on their expiration dates.
+• Search: Implement a search feature for users to quickly find specific items by name or category.
+• Filters: Allow users to apply filters to view items by categories such as active, expiring soon, and expired.
+• Dashboard: Provide a visual overview of items, highlighting their statuses and upcoming expirations for easy management.
+
+User Flow -
+
+Users start on the landing page where they can access the main dashboard. From there, they can:
+
+1. Click on the "Add Item" button to create a new record.
+2. Fill out the form with the item's details, including name, category, and expiration date.
+3. Save the record to view it on the dashboard.
+4. Use the search bar to find specific items or apply filters to display items by their status.
+5. Click on any record to view, edit, or delete details as needed.
+
+Technical Stack -
+
+• Frontend: React for a responsive and user-friendly interface.
+• Backend: Node.js with Express for handling CRUD operations and managing data.
+• Database: MongoDB for storing item records and their expiration dates.
+• Deployment: Heroku or Vercel for hosting the application.
+
+Design Guidelines -
+
+• Styling Guidelines: Utilize a clean and minimalistic design with a cohesive color palette and easy-to-read typography.
+• Page Layout: The dashboard should display a list of items with their status, a search bar at the top, and filter options on the side.
+• Navigation Structure: Ensure easy navigation with clearly labeled buttons for adding items, managing records, and accessing filters.
+
+Backend Structure -
+
+• Database Architecture: Design a schema for storing user data and item records, including fields like item name, category, expiration date, and status.
+• API Endpoints:
+GET /items: Retrieve all items.
+POST /items: Create a new item.
+PUT /items/:id: Update an existing item.
+DELETE /items/:id: Remove an item.
+
+• Security Measures: Implement basic data protection protocols, such as input validation and sanitization.
+
+In-Scope and Out-of-Scope Items -
+
+In-Scope:
+
+• Core features as listed above (CRUD functionality, expiry tracking, search, filters, and dashboard).
+
+Out-of-Scope:
+
+• Notifications for expiring items.
+• Third-party integrations (e.g., calendar apps).
+• User authentication and advanced security features.
+• Detailed analytics or reporting functionalities.

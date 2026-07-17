@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Expiry Tracker API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: items
+    description: Expiry item operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,161 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /items:
+    get:
+      operationId: listItems
+      tags: [items]
+      summary: List all items
+      description: Returns a list of items, with optional search and filter by status
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Search by title or category (case-insensitive)
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          description: Filter by computed status
+          schema:
+            type: string
+            enum: [active, expiring_soon, expired]
+        - name: sort
+          in: query
+          required: false
+          description: Sort direction for expiration date
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+      responses:
+        "200":
+          description: List of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Item"
+    post:
+      operationId: createItem
+      tags: [items]
+      summary: Create a new item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemInput"
+      responses:
+        "201":
+          description: Item created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /items/summary:
+    get:
+      operationId: getItemsSummary
+      tags: [items]
+      summary: Get dashboard summary
+      description: Returns counts of items grouped by status
+      responses:
+        "200":
+          description: Summary counts by status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemsSummary"
+
+  /items/{id}:
+    get:
+      operationId: getItem
+      tags: [items]
+      summary: Get a single item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Item found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "404":
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateItem
+      tags: [items]
+      summary: Update an existing item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemUpdate"
+      responses:
+        "200":
+          description: Item updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteItem
+      tags: [items]
+      summary: Delete an item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Item deleted
+        "404":
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +191,81 @@ components:
       required:
         - status
 
+    Item:
+      type: object
+      required: [id, title, expiration_date, status, created_at, updated_at]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        category:
+          type: ["string", "null"]
+        expiration_date:
+          type: string
+          description: Date string in YYYY-MM-DD format
+        notes:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, expiring_soon, expired]
+          description: Computed from expiration_date vs today
+        days_remaining:
+          type: ["integer", "null"]
+          description: Days until expiration (negative = already expired)
+        created_at:
+          type: string
+        updated_at:
+          type: string
+
+    ItemInput:
+      type: object
+      required: [title, expiration_date]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        category:
+          type: string
+        expiration_date:
+          type: string
+          description: Date string in YYYY-MM-DD format
+        notes:
+          type: string
+
+    ItemUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        category:
+          type: ["string", "null"]
+        expiration_date:
+          type: string
+          description: Date string in YYYY-MM-DD format
+        notes:
+          type: ["string", "null"]
+
+    ItemsSummary:
+      type: object
+      required: [total, active, expiring_soon, expired]
+      properties:
+        total:
+          type: integer
+        active:
+          type: integer
+        expiring_soon:
+          type: integer
+        expired:
+          type: integer
+        expiring_this_week:
+          type: integer
+          description: Items expiring within 7 days
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
