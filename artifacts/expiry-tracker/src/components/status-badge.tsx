@@ -31,7 +31,7 @@ export function StatusBadge({ status, daysRemaining }: { status: Status; daysRem
         }
       }
       return (
-        <Badge variant="active" className="gap-1 px-2 py-0.5 bg-opacity-10 text-[#10b981]">
+        <Badge variant="active" className="gap-1 px-2 py-0.5 bg-success/10 text-success">
           <CheckCircle2 className="w-3 h-3" />
           {activeText}
         </Badge>

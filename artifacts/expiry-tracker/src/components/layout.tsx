@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, List, PlusCircle } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -46,7 +47,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 space-y-2">
+          <ThemeToggle showLabel className="w-full" />
           <Link
             href="/items/new"
             className="flex items-center gap-2 justify-center w-full px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium shadow-sm hover:opacity-90 transition-opacity outline-none"
@@ -92,6 +94,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <PlusCircle className="w-5 h-5" />
           <span className="text-[10px] font-medium">Add Item</span>
         </Link>
+        <div className="flex flex-col items-center justify-center gap-1 min-w-[64px] h-full">
+          <ThemeToggle />
+          <span className="text-[10px] font-medium text-muted-foreground">Theme</span>
+        </div>
       </nav>
     </div>
   );

@@ -11,8 +11,8 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary text-secondary-foreground",
         destructive: "border-transparent bg-destructive text-destructive-foreground",
         outline: "text-foreground",
-        active: "border-transparent bg-[#10b981] text-white", // custom for the active status
-        warning: "border-transparent bg-[#f59e0b] text-white", // custom for expiring_soon status
+        active: "border-transparent bg-success text-success-foreground", // custom for the active status
+        warning: "border-transparent bg-warning text-warning-foreground", // custom for expiring_soon status
       },
     },
     defaultVariants: {

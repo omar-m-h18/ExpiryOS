@@ -141,8 +141,8 @@ export function ItemsList() {
               <Card className="hover-elevate transition-all overflow-hidden flex items-stretch">
                 <div className={`w-1 shrink-0 ${
                   item.status === 'expired' ? 'bg-destructive' :
-                  item.status === 'expiring_soon' ? 'bg-[#f59e0b]' :
-                  'bg-[#10b981]'
+                  item.status === 'expiring_soon' ? 'bg-warning' :
+                  'bg-success'
                 }`} />
                 <div className="p-4 flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex flex-col gap-1">

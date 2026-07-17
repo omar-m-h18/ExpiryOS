@@ -66,10 +66,10 @@ export function Dashboard() {
           </Link>
           
           <Link href="/items?status=active" className="group outline-none">
-            <Card className="hover-elevate cursor-pointer border-l-4 border-l-[#10b981] transition-all">
+            <Card className="hover-elevate cursor-pointer border-l-4 border-l-success transition-all">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Active</CardTitle>
-                <CheckCircle2 className="w-4 h-4 text-[#10b981]" />
+                <CheckCircle2 className="w-4 h-4 text-success" />
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">{summary.active}</div>
@@ -78,13 +78,13 @@ export function Dashboard() {
           </Link>
 
           <Link href="/items?status=expiring_soon" className="group outline-none">
-            <Card className="hover-elevate cursor-pointer border-l-4 border-l-[#f59e0b] transition-all bg-[#f59e0b]/5">
+            <Card className="hover-elevate cursor-pointer border-l-4 border-l-warning transition-all bg-warning/5">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Expiring Soon</CardTitle>
-                <Clock className="w-4 h-4 text-[#f59e0b]" />
+                <Clock className="w-4 h-4 text-warning" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-[#f59e0b]">{summary.expiring_soon}</div>
+                <div className="text-3xl font-bold text-warning">{summary.expiring_soon}</div>
               </CardContent>
             </Card>
           </Link>
