@@ -1,0 +1,167 @@
+Version 1 is now complete.
+
+Treat this as a production-ready open-source project that will be published publicly on GitHub and maintained by multiple contributors.
+
+Do NOT add new user-facing features or expand the MVP.
+
+Your objective is to refactor, polish, and prepare the project for long-term maintainability while preserving all existing functionality.
+
+Focus on the following:
+
+## 1. Code Quality
+
+Refactor the codebase to follow modern industry best practices.
+
+- Remove dead or duplicated code.
+- Improve naming consistency.
+- Reduce unnecessary complexity.
+- Separate concerns appropriately.
+- Keep components small and reusable.
+- Keep business logic separate from UI.
+- Avoid deeply nested logic where possible.
+- Improve readability without changing functionality.
+
+## 2. Documentation
+
+Add clear documentation throughout the project.
+
+Include:
+
+- Meaningful comments only where they explain intent or non-obvious logic.
+- JSDoc/TSDoc comments for exported functions, utilities, and reusable modules.
+- Clear README instructions for developers.
+- Explain project structure.
+- Explain how the expiry status calculation works.
+- Explain important architectural decisions.
+
+Avoid excessive comments that merely describe obvious code.
+
+## 3. Project Structure
+
+Organize the project into a clean, scalable folder structure suitable for an open-source repository.
+
+Make the structure easy for new contributors to understand.
+
+## 4. Maintainability
+
+Refactor so future contributors can easily add features without rewriting existing code.
+
+Use modular architecture.
+
+Keep responsibilities clearly separated.
+
+Avoid hardcoded values where configuration is more appropriate.
+
+## 5. Database Abstraction
+
+Design the data layer so it is database-agnostic.
+
+The application should not be tightly coupled to a single database implementation.
+
+Create a repository/data-access layer so that future contributors can replace or add databases with minimal changes.
+
+Examples include:
+
+- PostgreSQL
+- Supabase
+- SQLite
+- MongoDB
+- Replit Database
+
+The rest of the application should not need modification when swapping database providers.
+
+## 6. Configuration
+
+Move configurable values into environment variables or configuration files where appropriate.
+
+Examples:
+
+- Database connection
+- Expiring Soon threshold
+- Application name
+
+Avoid magic values scattered throughout the codebase.
+
+## 7. Error Handling
+
+Improve error handling across the application.
+
+Provide meaningful user-friendly messages while logging useful developer information.
+
+Avoid silent failures.
+
+## 8. Accessibility
+
+Review the UI for accessibility.
+
+Improve:
+
+- Semantic HTML
+- Keyboard navigation
+- Labels
+- Focus states
+- Color contrast
+- ARIA attributes where appropriate
+
+## 9. Performance
+
+Apply reasonable performance improvements without premature optimization.
+
+Examples:
+
+- Avoid unnecessary re-renders.
+- Optimize expensive computations.
+- Lazy load only where appropriate.
+- Keep bundle size reasonable.
+
+## 10. Open Source Readiness
+
+Prepare the repository for public collaboration.
+
+Ensure the project includes:
+
+- README.md
+- LICENSE (MIT)
+- CONTRIBUTING.md
+- CHANGELOG.md
+- CODE_OF_CONDUCT.md
+- .gitignore
+- .env.example
+
+Recommend a GitHub issue label system.
+
+Recommend a branching strategy.
+
+Recommend a semantic versioning strategy.
+
+## 11. Future Extensibility
+
+Without implementing them, identify clean extension points for future features such as:
+
+- Authentication
+- Notifications
+- Attachments
+- Import/Export
+- Multi-user support
+- Docker
+- REST API
+- Testing
+- CI/CD
+
+Design today's architecture so these additions will not require major refactoring.
+
+## 12. Final Review
+
+Perform a final architecture review.
+
+Identify:
+
+- Remaining technical debt
+- Potential code smells
+- Simplification opportunities
+- Security considerations
+- Maintainability concerns
+
+Then provide a summary explaining whether the repository is ready to be published as an open-source GitHub project and what, if anything, should be addressed before the first public release.
+
+Do not introduce feature creep. Prioritize maintainability, clarity, documentation, extensibility, and clean engineering over additional functionality.

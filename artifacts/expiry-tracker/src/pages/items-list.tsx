@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   useListItems, 
@@ -13,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { formatDate, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useItemFilters } from "@/hooks/use-item-filters";
 import { Search, Trash2, Inbox, ArrowUp, ArrowDown } from "lucide-react";
 import {
   AlertDialog,
@@ -29,13 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function ItemsList() {
   const [, setLocation] = useLocation();
-  const initialStatus = typeof window !== 'undefined' 
-    ? new URLSearchParams(window.location.search).get("status") 
-    : null;
-
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<string>(initialStatus || "all");
-  const [sort, setSort] = useState<"asc" | "desc">("asc");
+  const { search, status, sort, setSearch, setStatus, toggleSort } = useItemFilters();
 
   const { data: items, isLoading } = useListItems({
     search: search || undefined,
@@ -97,7 +91,7 @@ export function ItemsList() {
             ].map((s) => (
               <button
                 key={s.id}
-                onClick={() => setStatus(s.id)}
+                onClick={() => setStatus(s.id as import("@/hooks/use-item-filters").FilterStatus)}
                 className={cn(
                   "whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors outline-none",
                   status === s.id 
@@ -114,7 +108,8 @@ export function ItemsList() {
             variant="ghost" 
             size="sm" 
             className="shrink-0 self-end sm:self-auto"
-            onClick={() => setSort(sort === "asc" ? "desc" : "asc")}
+            onClick={toggleSort}
+            aria-label={sort === "asc" ? "Switch to latest first" : "Switch to soonest first"}
           >
             {sort === "asc" ? <ArrowUp className="w-4 h-4 mr-2" /> : <ArrowDown className="w-4 h-4 mr-2" />}
             <span className="inline">{sort === "asc" ? "Soonest first" : "Latest first"}</span>

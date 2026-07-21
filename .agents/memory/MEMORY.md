@@ -1,0 +1,3 @@
+- [Repository pattern](repository-pattern.md) — IItemsRepository decouples DB from routes; swap backends by changing only the singleton export.
+- [Status computation](status-computation.md) — status is never stored; always derived at request time via computeStatus() in lib/status.ts.
+- [Config centralization](config.md) — thresholds (EXPIRING_SOON_DAYS=30, EXPIRING_THIS_WEEK_DAYS=7) live in config/index.ts; never scatter magic numbers.
