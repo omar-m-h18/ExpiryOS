@@ -1,4 +1,4 @@
-# ExpiryTracker
+# ExpiryOS
 
 A clean, focused web application for tracking items with expiration dates — licenses, subscriptions, documents, insurance policies, and anything else that expires.
 
@@ -40,8 +40,8 @@ A clean, focused web application for tracking items with expiration dates — li
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/expiry-tracker.git
-cd expiry-tracker
+git clone https://github.com/your-org/expiry-os.git
+cd expiry-os
 
 # 2. Install all workspace dependencies
 pnpm install
@@ -54,8 +54,8 @@ cp .env.example .env
 pnpm --filter @workspace/db run push
 
 # 5. Start the development servers
-pnpm --filter @workspace/api-server run dev       # Express API
-pnpm --filter @workspace/expiry-tracker run dev   # Vite frontend
+pnpm --filter @workspace/api-server run dev   # Express API
+pnpm --filter @workspace/expiry-os run dev   # Vite frontend
 ```
 
 The frontend proxies API calls through Vite to the Express server.
@@ -65,7 +65,7 @@ The frontend proxies API calls through Vite to the Express server.
 ## Project Structure
 
 ```
-expiry-tracker/
+expiry-os/
 ├── artifacts/
 │   ├── api-server/              # Express 5 REST API
 │   │   └── src/
@@ -75,7 +75,7 @@ expiry-tracker/
 │   │       │   └── status.ts   # Expiry status computation (computeStatus, enrichItem)
 │   │       ├── repositories/    # Data-access abstraction (IItemsRepository)
 │   │       └── routes/          # Thin HTTP handlers
-│   └── expiry-tracker/          # React + Vite SPA
+│   └── expiry-tracker/          # React + Vite SPA (Replit artifact path; package @workspace/expiry-os)
 │       └── src/
 │           ├── components/      # Reusable UI components (shadcn/ui + custom)
 │           ├── hooks/           # Custom React hooks (useItemFilters, useToast)
@@ -129,7 +129,7 @@ All tuneable values are environment variables. See `.env.example` for the full l
 | `LOG_LEVEL` | `info` | Pino log level |
 | `EXPIRING_SOON_DAYS` | `30` | Days window for "expiring soon" status |
 | `EXPIRING_THIS_WEEK_DAYS` | `7` | Days window for dashboard "this week" bucket |
-| `APP_NAME` | `ExpiryTracker` | Application name in logs |
+| `APP_NAME` | `ExpiryOS` | Application name in logs |
 
 ---
 
@@ -186,4 +186,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, branching strat
 
 ## License
 
-[MIT](LICENSE) © ExpiryTracker Contributors
+[MIT](LICENSE) © ExpiryOS Contributors

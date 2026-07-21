@@ -1,4 +1,4 @@
-# Contributing to ExpiryTracker
+# Contributing to ExpiryOS
 
 Thank you for your interest in contributing! This document explains how to get
 started and how we manage the project.
@@ -25,8 +25,8 @@ started and how we manage the project.
 
 ```bash
 # 1. Fork and clone
-git clone https://github.com/your-fork/expiry-tracker.git
-cd expiry-tracker
+git clone https://github.com/your-fork/expiry-os.git
+cd expiry-os
 
 # 2. Install dependencies
 pnpm install
@@ -40,7 +40,7 @@ pnpm --filter @workspace/db run push
 
 # 5. Start development servers
 pnpm --filter @workspace/api-server run dev   # API on PORT
-pnpm --filter @workspace/expiry-tracker run dev  # Frontend (Vite)
+pnpm --filter @workspace/expiry-os run dev   # Frontend (Vite)
 ```
 
 ---
@@ -48,7 +48,7 @@ pnpm --filter @workspace/expiry-tracker run dev  # Frontend (Vite)
 ## Project Structure
 
 ```
-expiry-tracker/
+expiry-os/
 ├── artifacts/
 │   ├── api-server/          # Express 5 REST API
 │   │   └── src/
@@ -56,7 +56,7 @@ expiry-tracker/
 │   │       ├── lib/         # Shared utilities (logger, status computation)
 │   │       ├── repositories/ # Data-access layer (swap DB here)
 │   │       └── routes/      # Thin HTTP handlers
-│   └── expiry-tracker/      # React + Vite frontend
+│   └── expiry-tracker/      # React + Vite frontend (Replit artifact path; package @workspace/expiry-os)
 │       └── src/
 │           ├── components/  # Reusable UI components
 │           ├── hooks/       # Custom React hooks
@@ -89,7 +89,7 @@ expiry-tracker/
 4. **Run typechecks** before opening a PR:
    ```bash
    pnpm --filter @workspace/api-server run typecheck
-   pnpm --filter @workspace/expiry-tracker exec tsc --noEmit
+   pnpm --filter @workspace/expiry-os exec tsc --noEmit
    ```
 5. **Open a pull request** against `main`.
 

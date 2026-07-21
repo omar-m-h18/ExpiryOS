@@ -27,6 +27,6 @@ export const EXPIRING_THIS_WEEK_DAYS = Number(
 /**
  * Human-readable application name surfaced in structured logs.
  * Controlled by the APP_NAME environment variable.
- * @default "ExpiryTracker"
+ * @default "ExpiryOS"
  */
-export const APP_NAME = process.env.APP_NAME ?? "ExpiryTracker";
+export const APP_NAME = process.env.APP_NAME ?? "ExpiryOS";

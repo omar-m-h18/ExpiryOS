@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "Expiry Tracker"
+title = "ExpiryOS"
 version = "1.0.0"
 id = "artifacts/expiry-tracker"
 router = "path"
@@ -11,10 +11,10 @@ paths = [ "/" ]
 localPort = 23498
 
 [services.development]
-run = "pnpm --filter @workspace/expiry-tracker run dev"
+run = "pnpm --filter @workspace/expiry-os run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/expiry-tracker", "run", "build" ]
+build = [ "pnpm", "--filter", "@workspace/expiry-os", "run", "build" ]
 serve = "static"
 publicDir = "artifacts/expiry-tracker/dist/public"
 
