@@ -4,8 +4,8 @@ import { AlertCircle, ArrowRight, CheckCircle2, Clock, ShieldAlert, List } from 
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
+import { SpotlightAction } from "@/components/spotlight-action";
 import { formatDate } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 export function Dashboard() {
   const { data: summary, isLoading: isLoadingSummary } = useGetItemsSummary();
@@ -177,11 +177,7 @@ export function Dashboard() {
                       Clear schedule for the week. Relax!
                     </p>
                   )}
-                  <Link href="/items" className="mt-2 w-full">
-                    <Button variant="secondary" className="w-full">
-                      View Items
-                    </Button>
-                  </Link>
+                  <SpotlightAction items={expiringSoonItems} count={summary?.expiring_this_week ?? 0} />
                 </div>
               )}
             </CardContent>
