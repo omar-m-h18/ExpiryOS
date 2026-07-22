@@ -2,6 +2,10 @@
 
 A clean, focused web application for tracking items with expiration dates — licenses, subscriptions, documents, insurance policies, and anything else that expires.
 
+Organizations and individuals often track licenses, subscriptions, contracts, certifications, and other time-sensitive records across spreadsheets, calendars, emails, or paper. As these records grow, it becomes easy to miss renewal dates, causing unnecessary administrative work, service interruptions, or compliance risks.
+
+ExpiryOS provides a single place to manage these records and automatically identifies which items are active, expiring soon, or expired.
+
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
 ---
