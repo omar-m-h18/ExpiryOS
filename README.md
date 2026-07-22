@@ -189,6 +189,38 @@ The architecture is designed so the following additions require no major refacto
 
 ---
 
+---
+
+## Roadmap
+
+ExpiryOS follows a milestone-based roadmap to keep development focused while maintaining a stable, lightweight open-source project. Planned features are prioritized based on community feedback, practical value, and alignment with the project's core purpose.
+
+### v1.2
+
+- Docker support
+- CSV import and export
+- SQLite database provider
+- Automated unit tests
+- GitHub Actions CI pipeline
+
+### v1.3
+
+- Supabase database provider
+- Custom "Expiring Soon" threshold
+- Category management improvements
+- Bulk item actions
+
+### v2.0
+
+- User authentication
+- Multi-user workspaces
+- Notification system
+- File attachments
+
+> **Note:** This roadmap is subject to change as the project evolves and community contributions help shape future releases.
+
+---
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, branching strategy, commit conventions, and architecture notes.
