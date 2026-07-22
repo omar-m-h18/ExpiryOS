@@ -40,7 +40,7 @@ A clean, focused web application for tracking items with expiration dates — li
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/expiry-os.git
+git clone https://github.com/omar-m-h18/ExpiryOS
 cd expiry-os
 
 # 2. Install all workspace dependencies
