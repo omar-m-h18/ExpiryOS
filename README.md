@@ -23,9 +23,9 @@ ExpiryOS provides a single place to manage these records and automatically ident
 ---
 
 ## Screenshots
+<img width="1306" height="458" alt="image" src="https://github.com/user-attachments/assets/429b27c8-a601-445e-a3e3-a70129505e29" />
 <img width="1298" height="458" alt="image" src="https://github.com/user-attachments/assets/ddb5d9b1-2681-4cf7-9b00-3fe1949ca458" />
 <img width="1304" height="465" alt="image" src="https://github.com/user-attachments/assets/7a2239b6-6edf-4f7e-b2fa-d1b13a503e83" />
-<img width="1304" height="465" alt="image" src="https://github.com/user-attachments/assets/1ec68c40-6fdf-4e3d-8822-7b72361ada76" />
 
 ---
 
