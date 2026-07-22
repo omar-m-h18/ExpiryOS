@@ -189,8 +189,6 @@ The architecture is designed so the following additions require no major refacto
 
 ---
 
----
-
 ## Roadmap
 
 ExpiryOS follows a milestone-based roadmap to keep development focused while maintaining a stable, lightweight open-source project. Planned features are prioritized based on community feedback, practical value, and alignment with the project's core purpose.
