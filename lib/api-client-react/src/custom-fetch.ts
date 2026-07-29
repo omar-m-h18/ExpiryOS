@@ -2,7 +2,9 @@ const getBaseUrl = () => {
   if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
-  return "http://localhost:5000";
+  // In production, this fallback should not be used. 
+  // VITE_API_BASE_URL must be set in the Netlify environment variables.
+  throw new Error("VITE_API_BASE_URL environment variable is not set");
 };
 
 export const customFetch = async <T>(
