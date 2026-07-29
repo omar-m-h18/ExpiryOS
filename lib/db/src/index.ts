@@ -4,9 +4,10 @@ import { Pool } from "pg";
 const connectionString = process.env.DATABASE_URL;
 
 const pool = new Pool({
-  connectionString: connectionString?.includes("sslmode=require")
-    ? connectionString
-    : `${connectionString}?sslmode=require`,
+  connectionString: connectionString,
+  ssl: connectionString && !connectionString.includes('localhost')
+    ? { rejectUnauthorized: false }
+    : false,
 });
 
 export const db = drizzle(pool);
