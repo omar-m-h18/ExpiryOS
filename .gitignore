@@ -1,8 +1,6 @@
-```gitignore
+```
 # Dependencies
 node_modules/
-.julia/
-zig-cache/
 
 # Build artifacts
 dist/
@@ -14,32 +12,54 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.py.class
 .Python
 env/
 venv/
 .venv/
 .ENV
-.env
-.env.local
-.env.*
-.pytest_cache/
-.mypy_cache/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
 .coverage
-coverage/
-
-# Logs
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
 *.log
-
-# OS generated files
+*.tmp
+*.swp
+*~
 .DS_Store
 Thumbs.db
 
-# Editor
+# Environment variables
+.env
+.env.local
+.env.*
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*.tmp
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# PyTest
+.pytest_cache/
 
 # Compressed files
 *.zip
