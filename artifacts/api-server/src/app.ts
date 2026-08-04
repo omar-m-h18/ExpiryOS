@@ -7,9 +7,6 @@ const app = express();
 
 app.use(helmet());
 
-// CORS configuration for production
-// FRONTEND_URL should be set to the Netlify deployment URL in production
-// For multiple frontend URLs, use an array: origin: [process.env.FRONTEND_URL]
 const allowedOrigin = process.env.FRONTEND_URL;
 if (allowedOrigin) {
   app.use(cors({
@@ -17,7 +14,6 @@ if (allowedOrigin) {
     credentials: true
   }));
 } else {
-  // In development, allow all origins
   app.use(cors({
     origin: true,
     credentials: true
@@ -26,6 +22,7 @@ if (allowedOrigin) {
 
 app.use(express.json());
 
-app.use(router);
+// FIX #1: Mount everything under /api so it matches the frontend calls
+app.use("/api", router);
 
 export { app };
