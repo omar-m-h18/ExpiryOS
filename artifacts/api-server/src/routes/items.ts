@@ -44,7 +44,7 @@ router.get("/items", async (req: Request, res: Response): Promise<void> => {
 router.post("/items", async (req: Request, res: Response): Promise<void> => {
   const parsed = CreateItemBody.safeParse(req.body);
   if (!parsed.success) {
-    req.log.warn({ errors: parsed.error.flatten() }, "Invalid create-item body");
+    console.warn("Invalid create-item body", parsed.error.flatten());
     res.status(400).json({ error: "Invalid request body", details: parsed.error.flatten() });
     return;
   }
@@ -80,7 +80,7 @@ router.patch("/items/:id", async (req: Request, res: Response): Promise<void> =>
 
   const parsed = UpdateItemBody.safeParse(req.body);
   if (!parsed.success) {
-    req.log.warn({ errors: parsed.error.flatten() }, "Invalid update-item body");
+    console.warn("Invalid update-item body", parsed.error.flatten());
     res.status(400).json({ error: "Invalid request body", details: parsed.error.flatten() });
     return;
   }
