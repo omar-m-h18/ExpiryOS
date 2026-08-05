@@ -226,12 +226,12 @@ components:
           type: string
           minLength: 1
         category:
-          type: string
+          type: ["string", "null"]
         expiration_date:
           type: string
           description: Date string in YYYY-MM-DD format
         notes:
-          type: string
+          type: ["string", "null"]
 
     ItemUpdate:
       type: object
