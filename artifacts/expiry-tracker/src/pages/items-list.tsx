@@ -132,64 +132,69 @@ export function ItemsList() {
           ))
         ) : items && items.length > 0 ? (
           items.map((item) => (
-            <Link key={item.id} href={`/demo/items/${item.id}/edit`} className="block outline-none group">
-              <Card className="hover-elevate transition-all overflow-hidden flex items-stretch">
-                <div className={`w-1 shrink-0 ${
-                  item.status === 'expired' ? 'bg-destructive' :
-                  item.status === 'expiring_soon' ? 'bg-warning' :
-                  'bg-success'
-                }`} />
-                <div className="p-4 flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex flex-col gap-1">
-                    <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
-                      {item.title}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                      {item.category && (
-                        <span className="bg-secondary px-2 py-0.5 rounded text-secondary-foreground font-medium text-xs">
-                          {item.category}
-                        </span>
-                      )}
-                      <span>Expires: <span className="font-medium text-foreground">{formatDate(item.expiration_date)}</span></span>
-                    </div>
+            <Card
+              key={item.id}
+              className="hover-elevate transition-all overflow-hidden flex items-stretch"
+            >
+              <div className={`w-1 shrink-0 ${
+                item.status === 'expired' ? 'bg-destructive' :
+                item.status === 'expiring_soon' ? 'bg-warning' :
+                'bg-success'
+              }`} />
+              <div className="p-4 flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* Only the title + expiry info are the clickable link to edit.
+                    Keep interactive controls (delete) OUTSIDE any <a> so their
+                    clicks can never navigate away or be swallowed by the link. */}
+                <Link href={`/demo/items/${item.id}/edit`} className="flex flex-col gap-1 outline-none group min-w-0">
+                  <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                    {item.title}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                    {item.category && (
+                      <span className="bg-secondary px-2 py-0.5 rounded text-secondary-foreground font-medium text-xs">
+                        {item.category}
+                      </span>
+                    )}
+                    <span>Expires: <span className="font-medium text-foreground">{formatDate(item.expiration_date)}</span></span>
                   </div>
-                  
-                  <div className="flex items-center justify-between sm:justify-end gap-6">
-                    <StatusBadge status={item.status} daysRemaining={item.days_remaining} />
-                    
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 z-10"
-                          onClick={(e) => e.stopPropagation()}
+                </Link>
+
+                {/* Status + Delete — unrelated to navigation, sits outside the <a>. */}
+                <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0">
+                  <StatusBadge status={item.status} daysRemaining={item.days_remaining} />
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 z-10"
+                        aria-label={`Delete ${item.title}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete the item "{item.title}".
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={(e) => handleDelete(item.id, e)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete the item "{item.title}".
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={(e) => handleDelete(item.id, e)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
-              </Card>
-            </Link>
+              </div>
+            </Card>
           ))
         ) : (
           <Card className="p-12 flex flex-col items-center justify-center text-center">
