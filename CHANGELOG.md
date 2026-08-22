@@ -84,6 +84,43 @@ This project follows [Semantic Versioning](https://semver.org/) and
   new surface is contractually described (regenerate generated code with
   `pnpm --filter @workspace/api-spec run codegen`).
 
+### Changed
+- **Schema** (`schema/items.ts`): added a `NOT NULL` `owner_id` column to scope
+  items to a visitor's session. This is a schema change — the hosted database
+  must be migrated (apply the schema / run Drizzle against Neon) before this
+  build runs.
+- **`app.ts`**: wired `cookie-parser` and mounted `requireSession` globally
+  before the `/api` router; documented the `FRONTEND_URL` / CORS behaviour
+  (explicit allow-list in production, permissive dev fallback).
+- **Routing** (`App.tsx`, `layout.tsx`, `dashboard.tsx`, `items-list.tsx`,
+  `item-form.tsx`, `not-found.tsx`, `spotlight-action.tsx`): the app now lives
+  under `/demo/*`; `/` is the public landing page. All internal navigation was
+  updated to the `/demo` prefix.
+- **`routes/items.ts`**: every handler now passes `req.ownerId` into the item
+  repository to preserve scoping across all HTTP methods.
+
+### Fixed
+- **Delete button on the items list** (`items-list.tsx`): the delete control was
+  nested inside the item's `<Link>`, so confirming deletion navigated to the edit
+  page and masked the delete. Only the title/expiry info is now the link; the
+  status badge and delete button sit outside any anchor, so a delete click can
+  no longer be swallowed by navigation. This also removes the invalid
+  "interactive element nested in an anchor" anti-pattern for better a11y.
+
+### Notes
+- No API surface was removed. Existing `/api/items` and `/api/healthz`
+  endpoints keep their shape and are now silently scoped to the caller's
+  session under the hood.
+- **Upgrade note (v1.0.0 → v1.1.0):** because `owner_id` is `NOT NULL` with no
+  existing value, an `items` table that already holds data will fail the column
+  migration. This project was launched under an anonymous demo, so clearing
+  legacy `items` rows (via the Neon SQL editor or by dropping the table) is the
+  intended, safe migration path before/at deploy.
+
+---
+
+## [1.0.0] — 2026-07-17
+
 ### Added
 - Initial release.
 - Full CRUD for tracked items (title, category, expiration date, notes).
