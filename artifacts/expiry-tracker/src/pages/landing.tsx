@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { insertLead } from "@/lib/demo";
-import { ThemeSelect } from "@/components/theme-select";
 
 const waitlistSchema = z.object({
   email: z.string().trim().email("Please enter a valid email address"),
@@ -55,16 +54,13 @@ export function Landing() {
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
         <div className="w-full max-w-2xl text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Brand */}
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-2xl shadow-sm">
-                E
-              </div>
-              <span className="font-display font-bold text-3xl tracking-tight text-foreground">
-                ExpiryOS
-              </span>
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-2xl shadow-sm">
+              E
             </div>
-            <ThemeSelect />
+            <span className="font-display font-bold text-3xl tracking-tight text-foreground">
+              ExpiryOS
+            </span>
           </div>
 
           {/* Hero */}

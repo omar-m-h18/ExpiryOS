@@ -1,8 +1,13 @@
 const getBaseUrl = () => {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
+  const explicit =
+    typeof import.meta !== "undefined" ? import.meta.env?.VITE_API_BASE_URL : undefined;
+  if (typeof explicit === "string" && explicit.length > 0) {
+    return explicit.replace(/\/$/, "");
   }
-  throw new Error("VITE_API_BASE_URL environment variable is not set");
+  // Fall back to same-origin (relative) when not configured. In development
+  // Vite proxies /api to the Express server; in production the deploy must set
+  // VITE_API_BASE_URL to the Render backend URL.
+  return "";
 };
 
 export const customFetch = async <T>(
