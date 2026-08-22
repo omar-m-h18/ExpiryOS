@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const itemsTable = pgTable("items", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  ownerId: text("owner_id").notNull(),
   title: text("title").notNull(),
   category: text("category"),
   expirationDate: date("expiration_date", { mode: "string" }).notNull(),

@@ -21,7 +21,7 @@ interface SpotlightActionProps {
 export function SpotlightAction({ items, count }: SpotlightActionProps) {
   if (count === 0) {
     return (
-      <Link href="/items" className="mt-2 w-full">
+      <Link href="/demo/items" className="mt-2 w-full">
         <Button variant="secondary" className="w-full">
           View Items
         </Button>
@@ -39,7 +39,7 @@ export function SpotlightAction({ items, count }: SpotlightActionProps) {
     ) ?? [];
 
   if (thisWeekItems.length === 1) {
-    const target = `/items/${thisWeekItems[0].id}/edit`;
+    const target = `/demo/items/${thisWeekItems[0].id}/edit`;
     return (
       <Link href={target} className="mt-2 w-full">
         <Button variant="secondary" className="w-full">
@@ -50,7 +50,7 @@ export function SpotlightAction({ items, count }: SpotlightActionProps) {
   }
 
   return (
-    <Link href="/items?status=expiring_soon" className="mt-2 w-full">
+    <Link href="/demo/items?status=expiring_soon" className="mt-2 w-full">
       <Button variant="secondary" className="w-full">
         View Expiring Items
       </Button>

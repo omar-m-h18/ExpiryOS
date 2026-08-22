@@ -181,6 +181,56 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /session:
+    get:
+      operationId: getSessionInfo
+      tags: [session]
+      summary: Get current demo session info
+      responses:
+        "200":
+          description: Session is active
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionInfo"
+    post:
+      operationId: resetSession
+      tags: [session]
+      summary: Reset the current demo session (fresh room + new sample data)
+      responses:
+        "200":
+          description: Session reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionInfo"
+
+  /leads:
+    post:
+      operationId: createLead
+      tags: [leads]
+      summary: Join the early-bird waitlist
+      description: Stores an email (case-insensitive, idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadInput"
+      responses:
+        "201":
+          description: Lead created (or already existed)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "400":
+          description: Invalid email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -190,6 +240,36 @@ components:
           type: string
       required:
         - status
+
+    SessionInfo:
+      type: object
+      required: [demo]
+      properties:
+        demo:
+          type: boolean
+          description: Always true (this is an anonymous demo session)
+        ownerId:
+          type: string
+          description: The ephemeral session id (when returned by the reset endpoint)
+
+    LeadInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+
+    Lead:
+      type: object
+      required: [id, email, created_at]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
 
     Item:
       type: object

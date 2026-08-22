@@ -7,20 +7,31 @@ import { AppLayout } from '@/components/layout';
 import { Dashboard } from '@/pages/dashboard';
 import { ItemsList } from '@/pages/items-list';
 import { ItemForm } from '@/pages/item-form';
+import { Landing } from '@/pages/landing';
 
 const queryClient = new QueryClient();
 
 function Router() {
   return (
-    <AppLayout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/items" component={ItemsList} />
-        <Route path="/items/new" component={ItemForm} />
-        <Route path="/items/:id/edit" component={ItemForm} />
-        <Route component={NotFound} />
-      </Switch>
-    </AppLayout>
+    <Switch>
+      {/* Public landing page (demo + waitlist) */}
+      <Route path="/" component={Landing} />
+
+      {/* The actual app — under /demo (wildcard so sub-paths match the layout) */}
+      <Route path="/demo/:rest*">
+        <AppLayout>
+          <Switch>
+            <Route path="/demo" component={Dashboard} />
+            <Route path="/demo/items" component={ItemsList} />
+            <Route path="/demo/items/new" component={ItemForm} />
+            <Route path="/demo/items/:id/edit" component={ItemForm} />
+            <Route component={NotFound} />
+          </Switch>
+        </AppLayout>
+      </Route>
+
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 

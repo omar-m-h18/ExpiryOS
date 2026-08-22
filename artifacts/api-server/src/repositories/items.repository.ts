@@ -72,29 +72,29 @@ export interface ItemsSummary {
  * ORM-specific types, so consumers remain fully database-agnostic.
  */
 export interface IItemsRepository {
-  /** Return all items, optionally filtered and sorted. */
-  findAll(options?: ListItemsOptions): Promise<EnrichedItem[]>;
+  /** Return all items for an owner, optionally filtered and sorted. */
+  findAll(ownerId: string, options?: ListItemsOptions): Promise<EnrichedItem[]>;
 
-  /** Return a single item by its UUID, or `null` if not found. */
-  findById(id: string): Promise<EnrichedItem | null>;
+  /** Return a single item by its UUID and owner, or `null` if not found. */
+  findById(ownerId: string, id: string): Promise<EnrichedItem | null>;
 
-  /** Insert a new item and return the enriched representation. */
-  create(data: CreateItemData): Promise<EnrichedItem>;
+  /** Insert a new item owned by `ownerId` and return the enriched representation. */
+  create(ownerId: string, data: CreateItemData): Promise<EnrichedItem>;
 
   /**
    * Apply a partial update to an item.
-   * Returns the updated item or `null` when no item with that ID exists.
+   * Returns the updated item or `null` when no matching item exists for that owner.
    */
-  update(id: string, data: UpdateItemData): Promise<EnrichedItem | null>;
+  update(ownerId: string, id: string, data: UpdateItemData): Promise<EnrichedItem | null>;
 
   /**
-   * Delete an item by ID.
-   * Returns the deleted item or `null` when no item with that ID exists.
+   * Delete an item by ID and owner.
+   * Returns the deleted item or `null` when no matching item exists for that owner.
    */
-  delete(id: string): Promise<EnrichedItem | null>;
+  delete(ownerId: string, id: string): Promise<EnrichedItem | null>;
 
-  /** Compute aggregate status counts across all items. */
-  getSummary(): Promise<ItemsSummary>;
+  /** Compute aggregate status counts across all items for an owner. */
+  getSummary(ownerId: string): Promise<ItemsSummary>;
 }
 
 // ---------------------------------------------------------------------------
@@ -108,11 +108,11 @@ export interface IItemsRepository {
  * below to switch backends.
  */
 class DrizzleItemsRepository implements IItemsRepository {
-  async findAll(options: ListItemsOptions = {}): Promise<EnrichedItem[]> {
+  async findAll(ownerId: string, options: ListItemsOptions = {}): Promise<EnrichedItem[]> {
     const { search, status, sort = "asc" } = options;
     const sortDir = sort === "desc" ? desc : asc;
 
-    let query = db.select().from(itemsTable);
+    let query = db.select().from(itemsTable).where(eq(itemsTable.ownerId, ownerId));
 
     if (search) {
       query = query.where(
@@ -138,19 +138,20 @@ class DrizzleItemsRepository implements IItemsRepository {
     return enriched;
   }
 
-  async findById(id: string): Promise<EnrichedItem | null> {
+  async findById(ownerId: string, id: string): Promise<EnrichedItem | null> {
     const [row] = await db
       .select()
       .from(itemsTable)
-      .where(eq(itemsTable.id, id));
+      .where(eq(itemsTable.id, id) && eq(itemsTable.ownerId, ownerId));
 
     return row ? enrichItem(row) : null;
   }
 
-  async create(data: CreateItemData): Promise<EnrichedItem> {
+  async create(ownerId: string, data: CreateItemData): Promise<EnrichedItem> {
     const [row] = await db
       .insert(itemsTable)
       .values({
+        ownerId,
         title: data.title,
         category: data.category ?? null,
         expirationDate: data.expiration_date,
@@ -161,7 +162,7 @@ class DrizzleItemsRepository implements IItemsRepository {
     return enrichItem(row);
   }
 
-  async update(id: string, data: UpdateItemData): Promise<EnrichedItem | null> {
+  async update(ownerId: string, id: string, data: UpdateItemData): Promise<EnrichedItem | null> {
     // Build a sparse patch object — only include fields that were provided.
     // This ensures a PATCH truly behaves as a partial update.
     const patch: Partial<{
@@ -179,26 +180,29 @@ class DrizzleItemsRepository implements IItemsRepository {
     const [row] = await db
       .update(itemsTable)
       .set(patch)
-      .where(eq(itemsTable.id, id))
+      .where(eq(itemsTable.id, id) && eq(itemsTable.ownerId, ownerId))
       .returning();
 
     return row ? enrichItem(row) : null;
   }
 
-  async delete(id: string): Promise<EnrichedItem | null> {
+  async delete(ownerId: string, id: string): Promise<EnrichedItem | null> {
     const [row] = await db
       .delete(itemsTable)
-      .where(eq(itemsTable.id, id))
+      .where(eq(itemsTable.id, id) && eq(itemsTable.ownerId, ownerId))
       .returning();
 
     return row ? enrichItem(row) : null;
   }
 
-  async getSummary(): Promise<ItemsSummary> {
-    // Fetch all rows and compute counts in-memory. Acceptable for typical
-    // personal/team-sized datasets. For larger scale, replace with
+  async getSummary(ownerId: string): Promise<ItemsSummary> {
+    // Fetch rows for this owner and compute counts in-memory. Acceptable for
+    // typical personal/team-sized datasets. For larger scale, replace with
     // database-level aggregation queries.
-    const rows = await db.select().from(itemsTable);
+    const rows = await db
+      .select()
+      .from(itemsTable)
+      .where(eq(itemsTable.ownerId, ownerId));
 
     let active = 0;
     let expiring_soon = 0;

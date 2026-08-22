@@ -22,7 +22,7 @@ export default function NotFound() {
             The page you're looking for doesn't exist or has been moved.
           </p>
 
-          <Link href="/">
+          <Link href="/demo">
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="w-4 h-4" aria-hidden="true" />
               Back to Dashboard

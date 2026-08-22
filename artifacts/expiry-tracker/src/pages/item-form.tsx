@@ -100,7 +100,7 @@ export function ItemForm() {
           toast({ title: "Item created successfully" });
           queryClient.invalidateQueries({ queryKey: getListItemsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetItemsSummaryQueryKey() });
-          setLocation("/items");
+          setLocation("/demo/items");
         },
         onError: () => {
           toast({ title: "Failed to create item", variant: "destructive" });
@@ -113,7 +113,7 @@ export function ItemForm() {
           queryClient.invalidateQueries({ queryKey: getGetItemQueryKey(itemId) });
           queryClient.invalidateQueries({ queryKey: getListItemsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetItemsSummaryQueryKey() });
-          setLocation("/items");
+          setLocation("/demo/items");
         },
         onError: () => {
           toast({ title: "Failed to update item", variant: "destructive" });
@@ -142,7 +142,7 @@ export function ItemForm() {
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
       <Button 
         variant="ghost" 
-        onClick={() => setLocation("/items")}
+        onClick={() => setLocation("/demo/items")}
         className="pl-0 text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -233,7 +233,7 @@ export function ItemForm() {
                 <Button 
                   type="button" 
                   variant="ghost" 
-                  onClick={() => setLocation("/items")}
+                  onClick={() => setLocation("/demo/items")}
                   className="w-full sm:w-auto"
                 >
                   Cancel

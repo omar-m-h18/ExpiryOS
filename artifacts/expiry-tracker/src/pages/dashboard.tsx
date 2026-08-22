@@ -26,8 +26,8 @@ export function Dashboard() {
   ].slice(0, 6);
 
   const viewAllHref = (expiredItems && expiredItems.length > 0) 
-    ? "/items?status=expired" 
-    : "/items?status=expiring_soon";
+    ? "/demo/items?status=expired" 
+    : "/demo/items?status=expiring_soon";
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -53,7 +53,7 @@ export function Dashboard() {
         </div>
       ) : summary ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link href="/items" className="group outline-none">
+          <Link href="/demo/items" className="group outline-none">
             <Card className="hover-elevate cursor-pointer border-l-4 border-l-border transition-all bg-card">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Total Items</CardTitle>
@@ -65,7 +65,7 @@ export function Dashboard() {
             </Card>
           </Link>
           
-          <Link href="/items?status=active" className="group outline-none">
+          <Link href="/demo/items?status=active" className="group outline-none">
             <Card className="hover-elevate cursor-pointer border-l-4 border-l-success transition-all">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Active</CardTitle>
@@ -77,7 +77,7 @@ export function Dashboard() {
             </Card>
           </Link>
 
-          <Link href="/items?status=expiring_soon" className="group outline-none">
+          <Link href="/demo/items?status=expiring_soon" className="group outline-none">
             <Card className="hover-elevate cursor-pointer border-l-4 border-l-warning transition-all bg-warning/5">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Expiring Soon</CardTitle>
@@ -89,7 +89,7 @@ export function Dashboard() {
             </Card>
           </Link>
 
-          <Link href="/items?status=expired" className="group outline-none">
+          <Link href="/demo/items?status=expired" className="group outline-none">
             <Card className="hover-elevate cursor-pointer border-l-4 border-l-destructive transition-all bg-destructive/5">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Expired</CardTitle>
@@ -122,7 +122,7 @@ export function Dashboard() {
                 </div>
               ) : needsAttentionItems.length > 0 ? (
                 needsAttentionItems.map(item => (
-                  <Link key={item.id} href={`/items/${item.id}/edit`} className="block hover:bg-muted/50 transition-colors p-4 group outline-none">
+                  <Link key={item.id} href={`/demo/items/${item.id}/edit`} className="block hover:bg-muted/50 transition-colors p-4 group outline-none">
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-1">
                         <span className="font-medium group-hover:text-primary transition-colors">{item.title}</span>

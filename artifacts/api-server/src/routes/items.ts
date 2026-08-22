@@ -23,8 +23,8 @@ import { itemsRepository } from "../repositories/items.repository";
 const router: IRouter = Router();
 
 // GET /items/summary — must precede /items/:id
-router.get("/items/summary", async (_req: Request, res: Response): Promise<void> => {
-  const summary = await itemsRepository.getSummary();
+router.get("/items/summary", async (req: Request, res: Response): Promise<void> => {
+  const summary = await itemsRepository.getSummary(req.ownerId);
   res.json(summary);
 });
 
@@ -36,7 +36,7 @@ router.get("/items", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const items = await itemsRepository.findAll(parsed.data);
+  const items = await itemsRepository.findAll(req.ownerId, parsed.data);
   res.json(items);
 });
 
@@ -49,7 +49,7 @@ router.post("/items", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const item = await itemsRepository.create(parsed.data);
+  const item = await itemsRepository.create(req.ownerId, parsed.data);
   res.status(201).json(item);
 });
 
@@ -61,7 +61,7 @@ router.get("/items/:id", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const item = await itemsRepository.findById(params.data.id);
+  const item = await itemsRepository.findById(req.ownerId, params.data.id);
   if (!item) {
     res.status(404).json({ error: "Item not found" });
     return;
@@ -85,7 +85,7 @@ router.patch("/items/:id", async (req: Request, res: Response): Promise<void> =>
     return;
   }
 
-  const item = await itemsRepository.update(params.data.id, parsed.data);
+  const item = await itemsRepository.update(req.ownerId, params.data.id, parsed.data);
   if (!item) {
     res.status(404).json({ error: "Item not found" });
     return;
@@ -102,7 +102,7 @@ router.delete("/items/:id", async (req: Request, res: Response): Promise<void> =
     return;
   }
 
-  const item = await itemsRepository.delete(params.data.id);
+  const item = await itemsRepository.delete(req.ownerId, params.data.id);
   if (!item) {
     res.status(404).json({ error: "Item not found" });
     return;

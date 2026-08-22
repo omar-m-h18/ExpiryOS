@@ -65,7 +65,7 @@ export function ItemsList() {
             Manage and track all your expirations.
           </p>
         </div>
-        <Link href="/items/new">
+        <Link href="/demo/items/new">
           <Button>Add Item</Button>
         </Link>
       </div>
@@ -132,7 +132,7 @@ export function ItemsList() {
           ))
         ) : items && items.length > 0 ? (
           items.map((item) => (
-            <Link key={item.id} href={`/items/${item.id}/edit`} className="block outline-none group">
+            <Link key={item.id} href={`/demo/items/${item.id}/edit`} className="block outline-none group">
               <Card className="hover-elevate transition-all overflow-hidden flex items-stretch">
                 <div className={`w-1 shrink-0 ${
                   item.status === 'expired' ? 'bg-destructive' :
