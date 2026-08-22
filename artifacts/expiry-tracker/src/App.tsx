@@ -17,11 +17,19 @@ function Router() {
       {/* Public landing page (demo + waitlist) */}
       <Route path="/" component={Landing} />
 
-      {/* The actual app — under /demo (wildcard so sub-paths match the layout) */}
+      {/* Explicit bare /demo → Dashboard. The splat route below expects at
+          least one segment, so this guarantees "Start Demo" and the 404 page's
+          "Back to Dashboard" link (both → /demo) resolve correctly. */}
+      <Route path="/demo">
+        <AppLayout>
+          <Dashboard />
+        </AppLayout>
+      </Route>
+
+      {/* Sub-paths: /demo/items, /demo/items/new, /demo/items/:id/edit */}
       <Route path="/demo/:rest*">
         <AppLayout>
           <Switch>
-            <Route path="/demo" component={Dashboard} />
             <Route path="/demo/items" component={ItemsList} />
             <Route path="/demo/items/new" component={ItemForm} />
             <Route path="/demo/items/:id/edit" component={ItemForm} />
