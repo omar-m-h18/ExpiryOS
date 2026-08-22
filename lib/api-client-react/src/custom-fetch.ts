@@ -1,13 +1,12 @@
 const getBaseUrl = () => {
+  // In production, Netlify's `_redirects` proxies /api/* to the Render backend,
+  // so all calls stay same-origin — no CORS, no env var required.
+  // When VITE_API_BASE_URL is set (rare), honor it explicitly.
   const explicit =
     typeof import.meta !== "undefined" ? import.meta.env?.VITE_API_BASE_URL : undefined;
-  if (typeof explicit === "string" && explicit.length > 0) {
-    return explicit.replace(/\/$/, "");
-  }
-  // Fall back to same-origin (relative) when not configured. In development
-  // Vite proxies /api to the Express server; in production the deploy must set
-  // VITE_API_BASE_URL to the Render backend URL.
-  return "";
+  return typeof explicit === "string" && explicit.length > 0
+    ? explicit.replace(/\/$/, "")
+    : "";
 };
 
 export const customFetch = async <T>(

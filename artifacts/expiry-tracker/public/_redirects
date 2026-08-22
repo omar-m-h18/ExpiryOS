@@ -1,1 +1,7 @@
+# Netlify rewrites/redirects
+# Proxy all /api/* traffic to the Render backend so the static frontend can
+# reach it. Uses your exact .onrender.com base URL (no trailing slash).
+/api/*    https://expiryos-api.onrender.com/api/:splat   200
+
+# SPA fallback: serve index.html for any non-file path.
 /*    /index.html   200
