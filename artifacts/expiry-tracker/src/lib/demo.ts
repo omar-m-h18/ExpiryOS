@@ -1,13 +1,15 @@
 /**
  * Thin client helpers for the anonymous-demo endpoints.
  *
- * These call the two new backend routes directly (rather than generated hooks,
- * which don't exist yet for `/session` and `/leads` until codegen runs).
+ * `insertLead` posts to the early-bird waitlist from the landing page. The
+ * legacy "reset sample data" endpoint is intentionally not wired up anymore —
+ * sample data is auto-seeded on every fresh room by the backend.
  *
  * IMPORTANT: In production the frontend (Netlify) and backend (Render) are on
  * different origins, so relative `/api/...` paths would hit Netlify and fail.
  * We therefore resolve the API base the same way the generated client does —
- * from `VITE_API_BASE_URL` when set (dev proxy / prod), else relative.
+ * from `VITE_API_BASE_URL` when set; otherwise same-origin (handled by the
+ * Netlify `_redirects` proxy to Render).
  */
 
 function getApiBaseUrl(): string {
@@ -16,17 +18,6 @@ function getApiBaseUrl(): string {
   return typeof explicit === "string" && explicit.length > 0
     ? explicit.replace(/\/$/, "")
     : "";
-}
-
-/** Reset the current demo room and load a fresh batch of sample data. */
-export async function resetDemoSession(): Promise<void> {
-  const res = await fetch(`${getApiBaseUrl()}/api/session/reset`, {
-    method: "POST",
-    credentials: "include",
-  });
-  if (!res.ok) {
-    throw new Error("Failed to reset demo session");
-  }
 }
 
 /** Join the early-bird waitlist with an email. */

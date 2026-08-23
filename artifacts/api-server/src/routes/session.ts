@@ -11,19 +11,17 @@
 
 import { Router, type IRouter, type Request, type Response } from "express";
 import { randomUUID } from "node:crypto";
-import {
-  SESSION_COOKIE,
-  ensureSession,
-} from "../lib/session";
+import { SESSION_COOKIE } from "../lib/session";
 import { deleteSessionItems, seedSessionIfNew } from "../lib/seed";
 
 const router: IRouter = Router();
 
 // GET /api/session
-router.get("/session", async (req: Request, res: Response): Promise<void> => {
-  // ensureSession guarantees a cookie exists (minted by requireSession).
-  const ownerId = ensureSession(req, res);
-  res.json({ demo: true, ownerId });
+router.get("/session", async (_req: Request, res: Response): Promise<void> => {
+  // The session layer is alive. We deliberately do NOT return the ephemeral
+  // `ownerId` to the client — it's an internal identity, not something the
+  // UI needs, and exposing it is unnecessary information disclosure.
+  res.json({ demo: true });
 });
 
 // POST /api/session/reset
@@ -44,7 +42,7 @@ router.post("/session/reset", async (req: Request, res: Response): Promise<void>
   // 3. Seed the fresh room so the dashboard isn't empty on the next load.
   await seedSessionIfNew(newOwnerId);
 
-  res.json({ demo: true, reset: true, ownerId: newOwnerId });
+  res.json({ demo: true, reset: true });
 });
 
 export default router;

@@ -212,7 +212,7 @@ export function ItemsList() {
                 Clear Filters
               </Button>
             ) : (
-              <Link href="/items/new">
+              <Link href="/demo/items/new">
                 <Button>Add Your First Item</Button>
               </Link>
             )}

@@ -9,22 +9,36 @@ const app = express();
 
 app.use(helmet());
 
-// require an explicit, allow-listed frontend origin in production.
-// The dev proxy on localhost is handled by Vite proxying to this server,
-// so FRONTEND_URL is only needed for cross-origin / deployed setups.
+// CORS is only relevant when the frontend and API are on *different* origins.
+// In production we require an explicit allow-list. The Netlify `_redirects`
+// proxy forwards same-origin `/api/*` to Render, so in that topology CORS is
+// not even triggered — this guard is a safety net against a permissive API.
+const isProd = process.env.NODE_ENV === "production";
 const allowedOrigin = process.env.FRONTEND_URL;
-if (allowedOrigin) {
-  app.use(cors({
-    origin: allowedOrigin,
-    credentials: true,
-  }));
+
+if (isProd) {
+  if (!allowedOrigin) {
+    // Do NOT start a production API that accepts arbitrary origins.
+    throw new Error(
+      "FRONTEND_URL must be set in production. Set it to the frontend origin " +
+        "(e.g. https://expiryos.netlify.app).",
+    );
+  }
+  app.use(
+    cors({
+      origin: allowedOrigin,
+      credentials: true,
+    }),
+  );
 } else {
-  // Dev fallback: reflect the request origin (credentials included) so the
-  // Vite dev proxy and local tooling keep working. Tightened in production.
-  app.use(cors({
-    origin: true,
-    credentials: true,
-  }));
+  // Dev fallback: reflect the request origin so the Vite dev proxy / local
+  // tooling keep working. Never used in production (see guard above).
+  app.use(
+    cors({
+      origin: true,
+      credentials: true,
+    }),
+  );
 }
 
 app.use(express.json());
@@ -39,3 +53,4 @@ app.use(requireSession);
 app.use("/api", router);
 
 export { app };
+

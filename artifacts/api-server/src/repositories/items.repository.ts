@@ -196,11 +196,11 @@ class DrizzleItemsRepository implements IItemsRepository {
   }
 
   async getSummary(ownerId: string): Promise<ItemsSummary> {
-    // Fetch rows for this owner and compute counts in-memory. Acceptable for
-    // typical personal/team-sized datasets. For larger scale, replace with
-    // database-level aggregation queries.
+    // Status is derived (not stored), so it can't be COUNT'd in SQL. To keep
+    // the payload small, select only the `expiration_date` column needed to
+    // derive status, rather than full rows.
     const rows = await db
-      .select()
+      .select({ expirationDate: itemsTable.expirationDate })
       .from(itemsTable)
       .where(eq(itemsTable.ownerId, ownerId));
 

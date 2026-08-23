@@ -9,25 +9,38 @@ const getBaseUrl = () => {
     : "";
 };
 
-export const customFetch = async <T>(
-  url: string,
-  options: RequestInit
-): Promise<T> => {
+const REQUEST_TIMEOUT_MS = 15_000;
+
+export const customFetch = async <T>(url: string, options: RequestInit): Promise<T> => {
   const baseUrl = getBaseUrl();
 
-  const response = await fetch(`${baseUrl}${url}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  // Abort any request that hangs, so the UI never waits forever on a dead
+  // backend. Combines with any caller-supplied signal.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const signal =
+    typeof options.signal === "undefined"
+      ? controller.signal
+      : AbortSignal.any([options.signal, controller.signal]);
 
-  // FIX #3: If the server returns an error, throw it so the UI can show it
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({ error: response.statusText }));
-    throw new Error(err.error || `HTTP ${response.status}`);
+  // Only set Content-Type when there's a body (POST/PATCH). Avoids noise on
+  // GET/HEAD/DELETE and lets any explicit header win.
+  const headers = new Headers(options.headers);
+  if (options.body != null && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
   }
 
-  return response.json();
+  try {
+    const response = await fetch(`${baseUrl}${url}`, { ...options, headers, signal });
+
+    // If the server returns an error, throw it so the UI can show it.
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(err.error || `HTTP ${response.status}`);
+    }
+
+    return (await response.json()) as T;
+  } finally {
+    clearTimeout(timeout);
+  }
 };

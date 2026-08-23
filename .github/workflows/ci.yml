@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  typecheck-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Typecheck (all workspace packages)
+        run: pnpm run typecheck
+
+      - name: Unit tests (status + sample-data)
+        run: pnpm --filter @workspace/api-server test
+        env:
+          # DB-backed owner-isolation tests are skipped unless this is set,
+          # so CI stays green without provisioning a database.
+          RUN_DB_TESTS: "0"

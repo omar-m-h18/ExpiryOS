@@ -17,24 +17,27 @@ function Router() {
       {/* Public landing page (demo + waitlist) */}
       <Route path="/" component={Landing} />
 
-      {/* Explicit bare /demo → Dashboard. The splat route below expects at
-          least one segment, so this guarantees "Start Demo" and the 404 page's
-          "Back to Dashboard" link (both → /demo) resolve correctly. */}
+      {/* App — flat, explicit routes under /demo. Each is wrapped in AppLayout.
+          Using flat routes avoids wouter splat/nesting edge cases (e.g. bare
+          "/demo" falling through to NotFound). */}
       <Route path="/demo">
         <AppLayout>
           <Dashboard />
         </AppLayout>
       </Route>
-
-      {/* Sub-paths: /demo/items, /demo/items/new, /demo/items/:id/edit */}
-      <Route path="/demo/:rest*">
+      <Route path="/demo/items">
         <AppLayout>
-          <Switch>
-            <Route path="/demo/items" component={ItemsList} />
-            <Route path="/demo/items/new" component={ItemForm} />
-            <Route path="/demo/items/:id/edit" component={ItemForm} />
-            <Route component={NotFound} />
-          </Switch>
+          <ItemsList />
+        </AppLayout>
+      </Route>
+      <Route path="/demo/items/new">
+        <AppLayout>
+          <ItemForm />
+        </AppLayout>
+      </Route>
+      <Route path="/demo/items/:id/edit">
+        <AppLayout>
+          <ItemForm />
         </AppLayout>
       </Route>
 
