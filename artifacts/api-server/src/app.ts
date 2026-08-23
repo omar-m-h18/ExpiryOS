@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 import requireSession from "./middlewares/requireSession";
+import { errorHandler } from "./middlewares/error-handler";
 import router from "./routes";
 
 const app = express();
@@ -51,6 +52,10 @@ app.use(requireSession);
 
 // FIX #1: Mount everything under /api so it matches the frontend calls
 app.use("/api", router);
+
+// Central error handler — MUST be mounted after all routes. Logs the real
+// error server-side (Render logs) and returns a clean 500 JSON to the client.
+app.use(errorHandler);
 
 export { app };
 

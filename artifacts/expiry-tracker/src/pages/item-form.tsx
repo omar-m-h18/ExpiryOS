@@ -102,8 +102,9 @@ export function ItemForm() {
           queryClient.invalidateQueries({ queryKey: getGetItemsSummaryQueryKey() });
           setLocation("/demo/items");
         },
-        onError: () => {
-          toast({ title: "Failed to create item", variant: "destructive" });
+        onError: (err) => {
+          const msg = err instanceof Error ? err.message : "Failed to create item";
+          toast({ title: msg, variant: "destructive" });
         }
       });
     } else {
@@ -115,8 +116,9 @@ export function ItemForm() {
           queryClient.invalidateQueries({ queryKey: getGetItemsSummaryQueryKey() });
           setLocation("/demo/items");
         },
-        onError: () => {
-          toast({ title: "Failed to update item", variant: "destructive" });
+        onError: (err) => {
+          const msg = err instanceof Error ? err.message : "Failed to update item";
+          toast({ title: msg, variant: "destructive" });
         }
       });
     }
