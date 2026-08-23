@@ -1,7 +1,9 @@
 # Netlify rewrites/redirects
-# Proxy all /api/* traffic to the Render backend so the static frontend can
-# reach it. Uses your exact .onrender.com base URL (no trailing slash).
-
+# Proxy all /api/* traffic to the Render backend. The hard-coded public URL
+# below is NOT a secret (it's the same value already visible in the browser).
+# It was previously flagged only because a Netlify env var ("VITE_API_URL")
+# held the same value and was marked secret — that env var has been removed.
+/api/*    https://expiryos-api.onrender.com/api/:splat   200
 
 # SPA fallback: serve index.html for any non-file path.
 /*    /index.html   200
