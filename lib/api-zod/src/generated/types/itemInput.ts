@@ -9,8 +9,10 @@
 export interface ItemInput {
   /** @minLength 1 */
   title: string;
-  category?: string;
+  /** @nullable */
+  category?: string | null;
   /** Date string in YYYY-MM-DD format */
   expiration_date: string;
-  notes?: string;
+  /** @nullable */
+  notes?: string | null;
 }

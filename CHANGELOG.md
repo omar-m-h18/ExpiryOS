@@ -7,33 +7,36 @@ This project follows [Semantic Versioning](https://semver.org/) and
 
 ---
 
-## [Unreleased]
+## [1.1.0] — 2026-07-21
+
+Project-wide rebrand from **Expiry Tracker** to **ExpiryOS** plus open-source readiness and UX polish.
 
 ### Changed
-- Extracted status computation into `lib/status.ts` with full JSDoc.
-- Introduced `repositories/items.repository.ts` with `IItemsRepository`
-  interface and `DrizzleItemsRepository` implementation — decouples data
-  access from route handlers.
-- Centralised all configurable thresholds in `config/index.ts` (previously
-  hard-coded magic numbers in route handlers).
-- Thinned route handlers to validation + delegation only.
-- Added global Express error handler for consistent error response shape.
-- Replaced hardcoded hex status colours with CSS design tokens (`success`,
-  `warning`) for correct dark-mode support.
-- Added light/dark mode toggle with system-preference detection and
-  `localStorage` persistence.
-- Improved "Needs Attention" dashboard section to include both expired and
-  expiring-soon items sorted by urgency.
-- Replaced filter/sort dropdowns on the items list with pill-tab filters and
-  a single sort-toggle button.
-- Added mobile bottom tab bar; desktop sidebar unchanged.
+- **Branding**: renamed all visible references from "Expiry Tracker" / "ExpiryTracker" to **ExpiryOS**.
+  - Application title, browser metadata, and logo text.
+  - Frontend package renamed to `@workspace/expiry-os`.
+  - Replit workflow command updated to use the new package name.
+  - Default `APP_NAME` changed from `ExpiryTracker` to `ExpiryOS`.
+  - Theme `localStorage` key changed from `expiry-tracker-theme` to `expiry-os-theme`.
+- **OpenAPI specification**: description updated to *ExpiryOS API specification*; all generated client hooks and Zod schemas regenerated.
+- **Dashboard Spotlight**: clicking the Spotlight call-to-action now navigates to the single expiring item when only one exists, or to the filtered "Expiring Soon" list when multiple items are due this week.
+- **Repository pattern**: extracted `IItemsRepository` interface and `DrizzleItemsRepository` implementation, decoupling data access from route handlers.
+- **Status computation**: moved all expiry-status logic into `lib/status.ts` with fully documented `computeStatus()` and `enrichItem()` helpers; status remains derived at request time rather than stored.
+- **Config centralization**: all tuneable thresholds (`EXPIRING_SOON_DAYS`, `EXPIRING_THIS_WEEK_DAYS`) and `APP_NAME` now live in `config/index.ts` and load from environment variables with backward-compatible defaults.
+- **Route handlers**: thinned to validation + delegation only; moved business logic out of `routes/items.ts`.
+- **Error handling**: added a global Express error handler for consistent JSON error responses; Zod validation errors now include detailed `details`.
+- **Accessibility**: improved page landmarks, added `aria-label` to the items-list sort toggle, and added `aria-hidden` on decorative icons in the not-found page.
+- **Items list filtering**: extracted `useItemFilters` hook to own search/status/sort state and respect the initial `?status=` URL parameter.
+- **Theme**: added light/dark/system theme provider with `localStorage` persistence.
+- **Dashboard**: improved "Needs Attention" section to include both expired and expiring-soon items sorted by urgency; replaced filter/sort dropdowns with pill-tab filters and a single sort-toggle button; added mobile bottom tab bar while keeping the desktop sidebar.
 
 ### Added
-- `LICENSE` (MIT)
-- `CONTRIBUTING.md`
-- `CODE_OF_CONDUCT.md`
-- `.env.example` with annotated variable reference
-- JSDoc/TSDoc comments across exported modules
+- `README.md` with setup instructions, project structure, status algorithm explanation, API reference, and extensibility notes.
+- `CONTRIBUTING.md` with development workflow, branching strategy, conventional commits, and architecture notes.
+- `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1).
+- `LICENSE` (MIT).
+- `.env.example` with annotated environment variable reference.
+- JSDoc/TSDoc comments across exported modules.
 
 ---
 

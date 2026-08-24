@@ -51,9 +51,9 @@ export const ListItemsResponse = zod.array(ListItemsResponseItem)
 
 export const CreateItemBody = zod.object({
   "title": zod.string().min(1),
-  "category": zod.string().optional(),
+  "category": zod.string().nullish(),
   "expiration_date": zod.string().describe('Date string in YYYY-MM-DD format'),
-  "notes": zod.string().optional()
+  "notes": zod.string().nullish()
 })
 
 export const CreateItemResponse = zod.object({
@@ -140,5 +140,38 @@ export const DeleteItemParams = zod.object({
 })
 
 export const DeleteItemResponse = zod.void()
+
+
+/**
+ * @summary Get current demo session info
+ */
+export const GetSessionInfoResponse = zod.object({
+  "demo": zod.boolean().describe('Always true (this is an anonymous demo session)'),
+  "ownerId": zod.string().optional().describe('The ephemeral session id (when returned by the reset endpoint)')
+})
+
+
+/**
+ * @summary Reset the current demo session (fresh room + new sample data)
+ */
+export const ResetSessionResponse = zod.object({
+  "demo": zod.boolean().describe('Always true (this is an anonymous demo session)'),
+  "ownerId": zod.string().optional().describe('The ephemeral session id (when returned by the reset endpoint)')
+})
+
+
+/**
+ * Stores an email (case-insensitive, idempotent)
+ * @summary Join the early-bird waitlist
+ */
+export const CreateLeadBody = zod.object({
+  "email": zod.email()
+})
+
+export const CreateLeadResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "created_at": zod.string()
+})
 
 

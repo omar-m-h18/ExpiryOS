@@ -1,4 +1,21 @@
+export type AuthTokenGetter = () => string | undefined | Promise<string | undefined>;
+
+let configuredBaseUrl: string | undefined;
+let authTokenGetter: AuthTokenGetter | undefined;
+
+export const setBaseUrl = (baseUrl: string): void => {
+  configuredBaseUrl = baseUrl.replace(/\/$/, "");
+};
+
+export const setAuthTokenGetter = (getter: AuthTokenGetter): void => {
+  authTokenGetter = getter;
+};
+
 const getBaseUrl = () => {
+  if (configuredBaseUrl !== undefined) {
+    return configuredBaseUrl;
+  }
+
   // In production, Netlify's `_redirects` proxies /api/* to the Render backend,
   // so all calls stay same-origin — no CORS, no env var required.
   // When VITE_API_BASE_URL is set (rare), honor it explicitly.
@@ -29,9 +46,24 @@ export const customFetch = async <T>(url: string, options: RequestInit): Promise
   if (options.body != null && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
+  if (authTokenGetter && !headers.has("Authorization")) {
+    const token = await authTokenGetter();
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+  }
 
   try {
-    const response = await fetch(`${baseUrl}${url}`, { ...options, headers, signal });
+    const response = await fetch(`${baseUrl}${url}`, {
+      ...options,
+      headers,
+      signal,
+      // The API identifies anonymous demo visitors with an httpOnly cookie.
+      // Include it on every request so created items remain in the same room
+      // after the form navigates back to the items list. This is also required
+      // for the separate frontend/API origins used in production.
+      credentials: options.credentials ?? "include",
+    });
 
     // If the server returns an error, throw it so the UI can show it.
     if (!response.ok) {

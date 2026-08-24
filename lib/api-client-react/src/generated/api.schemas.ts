@@ -9,6 +9,23 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface SessionInfo {
+  /** Always true (this is an anonymous demo session) */
+  demo: boolean;
+  /** The ephemeral session id (when returned by the reset endpoint) */
+  ownerId?: string;
+}
+
+export interface LeadInput {
+  email: string;
+}
+
+export interface Lead {
+  id: string;
+  email: string;
+  created_at: string;
+}
+
 /**
  * Computed from expiration_date vs today
  */
@@ -44,10 +61,12 @@ export interface Item {
 export interface ItemInput {
   /** @minLength 1 */
   title: string;
-  category?: string;
+  /** @nullable */
+  category?: string | null;
   /** Date string in YYYY-MM-DD format */
   expiration_date: string;
-  notes?: string;
+  /** @nullable */
+  notes?: string | null;
 }
 
 export interface ItemUpdate {
