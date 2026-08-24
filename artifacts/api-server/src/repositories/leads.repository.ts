@@ -12,8 +12,11 @@ import { db, leadsTable, type Lead } from "@workspace/db";
 
 /**
  * Register an email on the waitlist. Idempotent — returns the existing row if
- * the email is already present (via a pre-check, with a re-query safety net
- * on any unique-violation race).
+ * the email is already present.
+ *
+ * Only the "unique_violation" case is treated as "already exists". Any other
+ * DB error (connection down, missing schema) is allowed to propagate so the
+ * global error handler surfaces it instead of being silently swallowed.
  *
  * @param email - raw email string (will be trimmed + lowercased)
  * @returns the saved lead row
@@ -37,13 +40,23 @@ export async function createLead(email: string): Promise<Lead> {
       .values({ email: normalized })
       .returning();
     return row;
-  } catch {
-    // Unique-violation race: read the existing row and return it.
-    const [row] = await db
-      .select()
-      .from(leadsTable)
-      .where(eq(leadsTable.email, normalized))
-      .limit(1);
-    return row;
+  } catch (err) {
+    // Only a unique violation (race between the pre-check and insert) should
+    // be treated as "already exists". Real errors must not be swallowed.
+    const isUniqueViolation =
+      typeof err === "object" &&
+      err !== null &&
+      (err as { code?: unknown }).code === "23505";
+    if (isUniqueViolation) {
+      const [row] = await db
+        .select()
+        .from(leadsTable)
+        .where(eq(leadsTable.email, normalized))
+        .limit(1);
+      if (row) {
+        return row;
+      }
+    }
+    throw err;
   }
 }
