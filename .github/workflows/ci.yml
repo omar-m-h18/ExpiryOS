@@ -14,7 +14,10 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Match the runtime Netlify uses (v24.19.0) so CI catches the same
+          # bugs that would otherwise appear only in deployed builds. Was 20.
+          node-version: 24
+          cache: pnpm
 
       - name: Enable pnpm
         run: corepack enable
