@@ -7,6 +7,34 @@ This project follows [Semantic Versioning](https://semver.org/) and
 
 ---
 
+## [Unreleased] — Docs & CI & production hardening
+
+### Added
+- **`KNOWLEDGE.md`** — a living project-knowledge file capturing the
+  anonymous-demo model, monorepo layout, infrastructure/hosting (Netlify →
+  Render proxy, Neon DB, env vars), CI setup, the TypeScript build-order
+  gotcha, and the release notes on making the demo private.
+
+### Changed
+- **CI (`ci.yml`)** now targets Node 24 to match the Netlify runtime, enables
+  pnpm from the `packageManager` field via corepack (`pnpm@10.30.3`), and omits
+  the `setup-node` pnpm cache (which errors before corepack provides the binary).
+
+### Fixed
+- **Live demo became private:** `items.owner_id NOT NULL` + a new `leads` table
+  were applied to the hosted Neon DB; legacy shared `items` rows were cleared so
+  the `owner_id` migration succeeds. This is what made "create item" and the
+  email waitlist work with no frontend redeploy.
+- **API build order (CI):** the api-server `typecheck` now uses
+  `tsc --build tsconfig.json` (with `--build` first) so the composite
+  `@workspace/db` and `@workspace/api-zod` declarations build before
+  typechecking — resolving the `TS6305` family.
+- **DB fail-fast:** `lib/db/src/index.ts` throws at startup when `DATABASE_URL`
+  is missing and sets sane pool timeouts so a dead DB fails fast instead of
+  hanging requests.
+
+---
+
 ## [1.1.0] — 2026-07-21
 
 Project-wide rebrand from **Expiry Tracker** to **ExpiryOS** plus open-source readiness and UX polish.
