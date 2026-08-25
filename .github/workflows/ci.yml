@@ -16,8 +16,10 @@ jobs:
         with:
           # Match the runtime Netlify uses (v24.19.0) so CI catches the same
           # bugs that would otherwise appear only in deployed builds. Was 20.
+          # NOTE: `cache: pnpm` is intentionally omitted — setup-node with
+          # cache=pnpm tries to locate the pnpm binary itself before corepack
+          # has provided it, causing "Unable to locate executable file: pnpm".
           node-version: 24
-          cache: pnpm
 
       - name: Enable pnpm (from packageManager field)
         run: |
