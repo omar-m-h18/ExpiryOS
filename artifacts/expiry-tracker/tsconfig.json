@@ -4,6 +4,11 @@
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
   "compilerOptions": {
     "noEmit": true,
+    // A few app components reference the React UMD global in *type* positions
+    // (e.g. `React.ReactNode`, `React.MouseEvent`) without an explicit import.
+    // This setting legalizes those UMD-global type references in modules so
+    // `tsc` doesn't raise TS2686; it does not affect any runtime behavior.
+    "allowUmdGlobalAccess": true,
     "jsx": "preserve",
     "lib": ["esnext", "dom", "dom.iterable"],
     "resolveJsonModule": true,

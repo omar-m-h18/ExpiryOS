@@ -20,7 +20,9 @@
  */
 
 import { EXPIRING_SOON_DAYS } from "../config";
-import type { itemsTable } from "@workspace/db";
+// `itemsTable` is used as a *value* below (`typeof itemsTable.$inferSelect`),
+// so it must be a regular import — an `import type` here trips TS1361.
+import { itemsTable } from "@workspace/db";
 
 /** The three possible expiry states of a tracked item. */
 export type ItemStatus = "active" | "expiring_soon" | "expired";
