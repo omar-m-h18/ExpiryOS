@@ -13,12 +13,10 @@ import { eq } from "drizzle-orm";
 import { db, itemsTable } from "@workspace/db";
 import { generateSampleItems } from "./sample-data";
 
-/**
- * Insert the default sample items for `ownerId` if that owner has none yet.
- *
- * @param ownerId - the ephemeral session id ("room number")
- */
-export async function seedSessionIfNew(ownerId: string): Promise<void> {
+/** In-flight seeding promises per owner, so parallel first requests share one seed. */
+const inFlightSeeds = new Map<string, Promise<void>>();
+
+async function seedForOwner(ownerId: string): Promise<void> {
   const existing = await db
     .select({ id: itemsTable.id })
     .from(itemsTable)
@@ -40,6 +38,33 @@ export async function seedSessionIfNew(ownerId: string): Promise<void> {
   await db.transaction(async (tx) => {
     await tx.insert(itemsTable).values(rows);
   });
+}
+
+/**
+ * Insert the default sample items for `ownerId` if that owner has none yet.
+ *
+ * Safe to call concurrently — parallel callers (e.g. the dashboard's
+ * simultaneous GETs on first paint) share the same in-flight seed instead of
+ * racing the idempotency check and double-seeding a fresh room.
+ *
+ * @param ownerId - the ephemeral session id ("room number")
+ */
+export function seedSessionIfNew(ownerId: string): Promise<void> {
+  const prior = inFlightSeeds.get(ownerId);
+  if (prior !== undefined) {
+    return prior;
+  }
+
+  const attempt = seedForOwner(ownerId).finally(() => {
+    // Clear the lock only if this exact attempt is still tracked, so a newer
+    // seed that replaced it (extremely unlikely) isn't deleted underneath.
+    if (inFlightSeeds.get(ownerId) === attempt) {
+      inFlightSeeds.delete(ownerId);
+    }
+  });
+
+  inFlightSeeds.set(ownerId, attempt);
+  return attempt;
 }
 
 /**

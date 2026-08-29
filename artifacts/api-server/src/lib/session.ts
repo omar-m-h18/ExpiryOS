@@ -12,8 +12,22 @@
 
 import { randomUUID } from "node:crypto";
 import type { Request, Response } from "express";
+import type { CookieOptions } from "express";
 
 export const SESSION_COOKIE = "expiryos_demo";
+
+const isProduction = process.env.NODE_ENV === "production";
+
+/**
+ * Shared cookie attributes. `secure` is enabled only in production — both
+ * Netlify and Render serve HTTPS there, but a `secure` cookie would never be
+ * sent over plain HTTP on a local dev server.
+ */
+export const SESSION_COOKIE_OPTIONS: CookieOptions = {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: isProduction,
+};
 
 /**
  * Return the visitor's session id, minting and persisting a new one when absent.
@@ -30,8 +44,7 @@ export function ensureSession(req: Request, res: Response): string {
 
   const id = randomUUID();
   res.cookie(SESSION_COOKIE, id, {
-    httpOnly: true,
-    sameSite: "lax",
+    ...SESSION_COOKIE_OPTIONS,
     // NO maxAge / expires → session cookie, cleared when the browser closes.
   });
 
@@ -47,8 +60,5 @@ export function ensureSession(req: Request, res: Response): string {
  * @param res - Express response
  */
 export function clearSession(res: Response): void {
-  res.clearCookie(SESSION_COOKIE, {
-    httpOnly: true,
-    sameSite: "lax",
-  });
+  res.clearCookie(SESSION_COOKIE, SESSION_COOKIE_OPTIONS);
 }

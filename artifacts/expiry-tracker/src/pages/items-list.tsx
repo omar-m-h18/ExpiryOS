@@ -1,8 +1,7 @@
 import { Link, useLocation } from "wouter";
-import { 
-  useListItems, 
-  useDeleteItem, 
-  getListItemsQueryKey,
+import {
+  useListItems,
+  useDeleteItem,
   getGetItemsSummaryQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -47,7 +46,9 @@ export function ItemsList() {
     deleteItem.mutate({ id }, {
       onSuccess: () => {
         toast({ title: "Item deleted successfully" });
-        queryClient.invalidateQueries({ queryKey: getListItemsQueryKey() });
+        // Prefix-based invalidation: the list is keyed by `["/api/items", {search, status, sort}]`,
+        // so invalidating just the `/api/items` prefix refreshes every filtered variant.
+        queryClient.invalidateQueries({ queryKey: ["/api/items"] });
         queryClient.invalidateQueries({ queryKey: getGetItemsSummaryQueryKey() });
       },
       onError: () => {

@@ -11,7 +11,7 @@
 
 import { Router, type IRouter, type Request, type Response } from "express";
 import { randomUUID } from "node:crypto";
-import { SESSION_COOKIE } from "../lib/session";
+import { SESSION_COOKIE, SESSION_COOKIE_OPTIONS } from "../lib/session";
 import { deleteSessionItems, seedSessionIfNew } from "../lib/seed";
 
 const router: IRouter = Router();
@@ -31,8 +31,7 @@ router.post("/session/reset", async (req: Request, res: Response): Promise<void>
   // 1. Issue a brand-new room and write it back to the visitor's cookie.
   const newOwnerId = randomUUID();
   res.cookie(SESSION_COOKIE, newOwnerId, {
-    httpOnly: true,
-    sameSite: "lax",
+    ...SESSION_COOKIE_OPTIONS,
     // No maxAge → still a session cookie (dies on browser close).
   });
 

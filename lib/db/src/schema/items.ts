@@ -1,6 +1,6 @@
 import { pgTable, text, date, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const itemsTable = pgTable("items", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),

@@ -8,14 +8,33 @@ on:
 jobs:
   typecheck-and-test:
     runs-on: ubuntu-latest
+    # Ephemeral PostgreSQL so the DB-gated owner-isolation tests actually run
+    # on every CI pass (matching the production Postgres on Neon).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: expiryos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/expiryos
+      RUN_DB_TESTS: "1"
     steps:
       - uses: actions/checkout@v4
 
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          # Match the runtime Netlify uses (v24.19.0) so CI catches the same
-          # bugs that would otherwise appear only in deployed builds. Was 20.
+          # Match the runtime Render uses (v24.19.0) so CI catches the same
+          # bugs that would otherwise appear only in deployed builds.
           # NOTE: `cache: pnpm` is intentionally omitted — setup-node with
           # cache=pnpm tries to locate the pnpm binary itself before corepack
           # has provided it, causing "Unable to locate executable file: pnpm".
@@ -32,9 +51,12 @@ jobs:
       - name: Typecheck (all workspace packages)
         run: pnpm run typecheck
 
-      - name: Unit tests (status + sample-data)
+      - name: Apply database schema (drizzle-kit push)
+        run: pnpm --filter @workspace/db run push
+
+      - name: Unit + DB integration tests
         run: pnpm --filter @workspace/api-server test
         env:
-          # DB-backed owner-isolation tests are skipped unless this is set,
-          # so CI stays green without provisioning a database.
-          RUN_DB_TESTS: "0"
+          # Kept for parity with the job-level default. DB-gated tests
+          # (`*.owner.test.ts`) run because a Postgres service is provisioned.
+          RUN_DB_TESTS: "1"

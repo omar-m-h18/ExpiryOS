@@ -165,7 +165,7 @@ export const ResetSessionResponse = zod.object({
  * @summary Join the early-bird waitlist
  */
 export const CreateLeadBody = zod.object({
-  "email": zod.email()
+  "email": zod.string().email()
 })
 
 export const CreateLeadResponse = zod.object({

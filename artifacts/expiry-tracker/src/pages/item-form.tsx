@@ -8,7 +8,6 @@ import {
   useUpdateItem,
   useGetItem,
   getGetItemQueryKey,
-  getListItemsQueryKey,
   getGetItemsSummaryQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -98,7 +97,7 @@ export function ItemForm() {
       createItem.mutate({ data: payload }, {
         onSuccess: () => {
           toast({ title: "Item created successfully" });
-          queryClient.invalidateQueries({ queryKey: getListItemsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: ["/api/items"] });
           queryClient.invalidateQueries({ queryKey: getGetItemsSummaryQueryKey() });
           setLocation("/demo/items");
         },
@@ -112,7 +111,7 @@ export function ItemForm() {
         onSuccess: () => {
           toast({ title: "Item updated successfully" });
           queryClient.invalidateQueries({ queryKey: getGetItemQueryKey(itemId) });
-          queryClient.invalidateQueries({ queryKey: getListItemsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: ["/api/items"] });
           queryClient.invalidateQueries({ queryKey: getGetItemsSummaryQueryKey() });
           setLocation("/demo/items");
         },
