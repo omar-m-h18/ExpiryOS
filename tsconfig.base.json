@@ -18,6 +18,11 @@
     "strictPropertyInitialization": true,
     "useUnknownInCatchVariables": true,
     "alwaysStrict": true,
+    // api-server default-imports CommonJS packages (express, cors, helmet,
+    // cookie-parser, pino) whose types use `export =`. Without this flag tsc
+    // rejects them with TS1259 ("can only be default-imported using the
+    // 'esModuleInterop' flag"), which was failing CI's typecheck step.
+    "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "es2022",
     "types": [],
