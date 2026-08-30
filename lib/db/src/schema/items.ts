@@ -1,5 +1,4 @@
 import { pgTable, text, date, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const itemsTable = pgTable("items", {
@@ -13,10 +12,12 @@ export const itemsTable = pgTable("items", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
-export const insertItemSchema = createInsertSchema(itemsTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+export const insertItemSchema = z.object({
+  ownerId: z.string(),
+  title: z.string(),
+  category: z.string().nullish(),
+  expirationDate: z.string(),
+  notes: z.string().nullish(),
 });
 
 export type InsertItem = z.infer<typeof insertItemSchema>;
