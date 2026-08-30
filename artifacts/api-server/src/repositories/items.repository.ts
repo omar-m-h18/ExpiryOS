@@ -22,7 +22,7 @@
  * @module repositories/items.repository
  */
 
-import { eq, ilike, or, asc, desc } from "drizzle-orm";
+import { eq, ilike, or, and, asc, desc } from "drizzle-orm";
 import { db, itemsTable } from "@workspace/db";
 import { EXPIRING_THIS_WEEK_DAYS } from "../config";
 import {
@@ -112,18 +112,22 @@ class DrizzleItemsRepository implements IItemsRepository {
     const { search, status, sort = "asc" } = options;
     const sortDir = sort === "desc" ? desc : asc;
 
-    let query = db.select().from(itemsTable).where(eq(itemsTable.ownerId, ownerId));
+    const conditions = [eq(itemsTable.ownerId, ownerId)];
 
     if (search) {
-      query = query.where(
+      conditions.push(
         or(
           ilike(itemsTable.title, `%${search}%`),
           ilike(itemsTable.category, `%${search}%`),
         ),
-      ) as typeof query;
+      );
     }
 
-    query = query.orderBy(sortDir(itemsTable.expirationDate)) as typeof query;
+    let query = db
+      .select()
+      .from(itemsTable)
+      .where(and(...conditions))
+      .orderBy(sortDir(itemsTable.expirationDate));
 
     const rows = await query;
     let enriched = rows.map(enrichItem);
@@ -142,7 +146,7 @@ class DrizzleItemsRepository implements IItemsRepository {
     const [row] = await db
       .select()
       .from(itemsTable)
-      .where(eq(itemsTable.id, id) && eq(itemsTable.ownerId, ownerId));
+      .where(and(eq(itemsTable.id, id), eq(itemsTable.ownerId, ownerId)));
 
     return row ? enrichItem(row) : null;
   }
@@ -180,7 +184,7 @@ class DrizzleItemsRepository implements IItemsRepository {
     const [row] = await db
       .update(itemsTable)
       .set(patch)
-      .where(eq(itemsTable.id, id) && eq(itemsTable.ownerId, ownerId))
+      .where(and(eq(itemsTable.id, id), eq(itemsTable.ownerId, ownerId)))
       .returning();
 
     return row ? enrichItem(row) : null;
@@ -189,7 +193,7 @@ class DrizzleItemsRepository implements IItemsRepository {
   async delete(ownerId: string, id: string): Promise<EnrichedItem | null> {
     const [row] = await db
       .delete(itemsTable)
-      .where(eq(itemsTable.id, id) && eq(itemsTable.ownerId, ownerId))
+      .where(and(eq(itemsTable.id, id), eq(itemsTable.ownerId, ownerId)))
       .returning();
 
     return row ? enrichItem(row) : null;
