@@ -25,8 +25,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, Loader2, Save } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const itemSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -185,16 +189,52 @@ export function ItemForm() {
                 <FormField
                   control={form.control}
                   name="expiration_date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Expiration Date</FormLabel>
-                      <FormControl>
-                        {/* Use a native date input for simplicity and best mobile support */}
-                        <Input type="date" {...field} className="block" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const selectedDate = field.value
+                      ? new Date(`${field.value}T00:00:00`)
+                      : undefined;
+
+                    return (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Expiration Date</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {selectedDate && !isNaN(selectedDate.getTime()) ? (
+                                  format(selectedDate, "dd/MM/yyyy")
+                                ) : (
+                                  <span>dd/mm/yyyy</span>
+                                )}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={selectedDate}
+                              onSelect={(date) => {
+                                if (date) {
+                                  field.onChange(format(date, "yyyy-MM-dd"));
+                                } else {
+                                  field.onChange("");
+                                }
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
