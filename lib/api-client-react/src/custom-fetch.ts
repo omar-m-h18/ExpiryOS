@@ -80,10 +80,9 @@ const performRequest = async <T>(
   }
 
   try {
-    const signal =
-      typeof options.signal === "undefined"
-        ? controller.signal
-        : AbortSignal.any([options.signal, controller.signal]);
+    const signal = options.signal
+      ? AbortSignal.any([options.signal, controller.signal])
+      : controller.signal;
 
     const response = await fetch(`${baseUrl}${url}`, {
       ...options,
