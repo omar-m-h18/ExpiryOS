@@ -115,11 +115,6 @@ class DrizzleItemsRepository implements IItemsRepository {
     const conditions = [eq(itemsTable.ownerId, ownerId)];
 
     if (search) {
-      conditions.push(
-        or(
-          ilike(itemsTable.title, `%${search}%`),
-          ilike(itemsTable.category, `%${search}%`),
-        ),
       const searchFilter = or(
         ilike(itemsTable.title, `%${search}%`),
         ilike(itemsTable.category, `%${search}%`),
