@@ -20,7 +20,9 @@ const getBaseUrl = () => {
   // so all calls stay same-origin — no CORS, no env var required.
   // When VITE_API_BASE_URL is set (rare), honor it explicitly.
   const explicit =
-    typeof import.meta !== "undefined" ? import.meta.env?.VITE_API_BASE_URL : undefined;
+    typeof import.meta !== "undefined"
+      ? (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_API_BASE_URL
+      : undefined;
   return typeof explicit === "string" && explicit.length > 0
     ? explicit.replace(/\/$/, "")
     : "";
