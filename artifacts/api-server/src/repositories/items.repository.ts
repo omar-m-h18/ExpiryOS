@@ -120,7 +120,13 @@ class DrizzleItemsRepository implements IItemsRepository {
           ilike(itemsTable.title, `%${search}%`),
           ilike(itemsTable.category, `%${search}%`),
         ),
+      const searchFilter = or(
+        ilike(itemsTable.title, `%${search}%`),
+        ilike(itemsTable.category, `%${search}%`),
       );
+      if (searchFilter) {
+        conditions.push(searchFilter);
+      }
     }
 
     let query = db
