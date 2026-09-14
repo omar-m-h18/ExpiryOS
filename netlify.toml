@@ -1,0 +1,10 @@
+# Netlify build configuration for the ExpiryOS monorepo.
+# Pins Node 24 (matches runtime/catalog) and uses corepack/pnpm from the root
+# package.json `packageManager` field. Builds only the web SPA package and
+# publishes Vite's output directory (contains index.html + assets + _redirects).
+[build]
+  command = "pnpm --filter @workspace/expiry-os run build"
+  publish = "artifacts/expiry-tracker/dist/public"
+
+[build.environment]
+  NODE_VERSION = "24"

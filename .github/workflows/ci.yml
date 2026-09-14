@@ -60,3 +60,41 @@ jobs:
           # Kept for parity with the job-level default. DB-gated tests
           # (`*.owner.test.ts`) run because a Postgres service is provisioned.
           RUN_DB_TESTS: "1"
+
+  # Deploy to Netlify ONLY after the typecheck-and-test gate passes, and only
+  # on pushes to main (never on pull_request, never on a failed check).
+  # This prevents wasting Netlify build/deploy credits on broken code.
+  deploy-netlify:
+    needs: typecheck-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable pnpm (from packageManager field)
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.30.3 --activate
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build web app
+        run: pnpm --filter @workspace/expiry-os run build
+
+      - name: Deploy to Netlify (production)
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publish-dir: artifacts/expiry-tracker/dist/public
+          deploy-message: "Deploy from GitHub Actions (main)"
+          production-deploy: true
+          enable-commit-comment: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
