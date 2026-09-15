@@ -41,7 +41,6 @@ export function ItemsList() {
   const { toast } = useToast();
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
     deleteItem.mutate({ id }, {
       onSuccess: () => {
