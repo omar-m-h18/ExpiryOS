@@ -21,7 +21,6 @@ ExpiryOS provides a single place to manage these records and automatically ident
 - **OpenAPI-first** — single source of truth in `lib/api-spec/openapi.yaml`; client hooks and Zod schemas are code-generated
 - **Private per-visitor demo** — each visitor gets their own ephemeral room with no sign-up; data is isolated to that visitor and disappears when the browser closes
 - **Auto-seeded sample data** — a brand-new room is populated with realistic, today-relative sample items so the demo is never empty
-- **"Start a sample" reset** — restart the current demo room with fresh sample data at any time
 - **Early-bird waitlist** — submit an email to join a self-hosted waitlist (no third-party marketing service)
 
 ---
@@ -38,8 +37,9 @@ visitor gets their own ephemeral "room":
 - The room is temporary: because the cookie has no expiry, it disappears when
   the browser (or a private window) closes. A fresh visit gets a clean room.
 - A brand-new room is automatically seeded with realistic, today-relative
-  sample items so the dashboard is never empty. The **"Start a sample"** control
-  calls `POST /api/session/reset` to restart the room with fresh sample data.
+  sample items so the dashboard is never empty. There is no in-app reset
+  control; the server-side `POST /api/session/reset` endpoint exists but is not
+  currently wired to the UI.
 - A self-hosted **early-bird waitlist** (`POST /api/leads`) captures emails for
   launch announcements — no third-party marketing service.
 
@@ -71,31 +71,97 @@ visitor gets their own ephemeral "room":
 
 ## Getting Started
 
-**Prerequisites:** Node.js 24+, pnpm 10.30.3 (via corepack / `packageManager`), PostgreSQL 15+ or a serverless instance (e.g. Neon)
+**Prerequisites:** Node.js 24+, pnpm 10.30.3 (via corepack / the root
+`packageManager` field), and PostgreSQL 15+ or a serverless instance (e.g. Neon).
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/omar-m-h18/ExpiryOS
-cd expiry-os
+cd ExpiryOS
 
 # 2. Install all workspace dependencies
 pnpm install
 
-# 3. Configure environment variables
-cp .env.example .env
-# Edit .env — set DATABASE_URL and PORT at minimum
-
-# 4. Push the database schema
+# 3. Push the database schema (requires DATABASE_URL to be set — see below)
 pnpm --filter @workspace/db run push
-
-# 5. Start the development servers
-pnpm --filter @workspace/api-server run dev   # Express API
-pnpm --filter @workspace/expiry-os run dev   # Vite frontend
 ```
 
-In development the frontend proxies API calls through Vite to the Express server.
+### Environment variables
+
+`.env.example` is a **reference only** — the app does **not** auto-load a `.env`
+file (there is no `dotenv` dependency). Each process reads `process.env`
+directly, so provide the variables through your shell, your hosting platform
+(Render / Netlify), or an explicit `--env-file` flag. At minimum set
+`DATABASE_URL` and `PORT`.
+
+```powershell
+# PowerShell
+$env:DATABASE_URL = "postgresql://postgres:password@localhost:5432/expirytracker"
+$env:PORT = "3001"
+```
+
+```bash
+# bash / zsh
+export DATABASE_URL="postgresql://postgres:password@localhost:5432/expirytracker"
+export PORT=3001
+```
+
+### Run the development servers
+
+Run the API and the frontend in **two separate terminals**.
+
+**API** — the package's own `dev` script uses bash `export` syntax and fails in
+PowerShell, so build and start it explicitly:
+
+```bash
+pnpm --filter @workspace/api-server run build
+
+# PowerShell
+$env:NODE_ENV = "development"; pnpm --filter @workspace/api-server run start
+
+# bash / zsh
+NODE_ENV=development pnpm --filter @workspace/api-server run start
+```
+
+**Frontend** — Vite, port `3000` by default (`PORT` overrides it):
+
+```bash
+pnpm --filter @workspace/expiry-os run dev
+```
+
+> Both the API and Vite read `PORT`, so avoid exporting the same value in both
+> terminals. Set `PORT` for the API and let Vite default to `3000`, or give them
+> distinct values.
+
+> **Local API wiring:** there is **no Vite dev proxy**. The SPA calls `/api/*`
+> on its own origin unless you point it at the API. Set
+> `VITE_API_BASE_URL=http://localhost:<api-port>` (e.g. `http://localhost:3001`)
+> in your environment before starting Vite (or in a `.env` file inside
+> `artifacts/expiry-tracker/`), and restart Vite after changing it.
+
 In production the SPA is served statically and `/api/*` is routed to the API
 host via a reverse proxy (see [Hosting / Deploy](#hosting--deploy)).
+
+---
+
+## Testing & Verification
+
+There is no linter or formatter; TypeScript is the safety net.
+
+```bash
+# Typecheck every workspace package (also builds the shared libs first)
+pnpm run typecheck
+
+# Run the API unit tests
+pnpm --filter @workspace/api-server test
+
+# Run a single test file
+pnpm --filter @workspace/api-server exec vitest run src/lib/status.test.ts
+```
+
+DB-backed tests (`*.owner.test.ts`) are skipped unless `RUN_DB_TESTS=1` **and** a
+real `DATABASE_URL` are set. CI provisions an ephemeral PostgreSQL service so
+they always run there.
 
 ---
 
@@ -110,16 +176,29 @@ The demo is deployed as two parts that talk through a reverse proxy:
   `pnpm --filter @workspace/db run push`.
 
 Netlify routes `/api/*` to the Render API host via `public/_redirects`, so the
-browser talks to one origin while the API handles requests server-side. CI
-(`.github/workflows/ci.yml`) typechecks and unit-tests every push on Node 24 +
-pnpm, so it catches build-order and type errors before a release.
+browser talks to one origin while the API handles requests server-side.
+
+CI (`.github/workflows/ci.yml`) runs on every push to `main` and on pull
+requests, on Node 24 + pnpm:
+
+1. `pnpm run typecheck`
+2. `pnpm --filter @workspace/db run push` against an ephemeral PostgreSQL service
+3. `pnpm --filter @workspace/api-server test` with `RUN_DB_TESTS=1`, so the
+   DB-backed owner-isolation tests run
+
+A separate `deploy-netlify` job builds the SPA and deploys it to Netlify, but
+**only after the checks pass and only on pushes to `main`**. It needs the
+`NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` repository secrets; if they are
+missing the deploy action exits successfully without deploying, so a green check
+does not by itself prove the site was updated. Do **not** add `cache: pnpm` to
+`actions/setup-node` — it runs before corepack provides pnpm and fails.
 
 ---
 
 ## Project Structure
 
 ```
-expiry-os/
+ExpiryOS/
 ├── artifacts/
 │   ├── api-server/              # Express 5 REST API
 │   │   └── src/
@@ -179,7 +258,7 @@ This approach means:
 
 ## Configuration
 
-All tuneable values are environment variables. See `.env.example` for the full list.
+All tuneable values are environment variables. See `.env.example` for the full list. These are **not** auto-loaded from a `.env` file — see [Environment variables](#environment-variables).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -190,7 +269,7 @@ All tuneable values are environment variables. See `.env.example` for the full l
 | `EXPIRING_SOON_DAYS` | `30` | Days window for "expiring soon" status |
 | `EXPIRING_THIS_WEEK_DAYS` | `7` | Days window for dashboard "this week" bucket |
 | `APP_NAME` | `ExpiryOS` | Application name in logs |
-| `FRONTEND_URL` | — | CORS allow-list for the API in production |
+| `FRONTEND_URL` | — | **Required in production.** CORS allow-list for the API; the server refuses to start without it |
 
 ---
 
@@ -198,6 +277,10 @@ All tuneable values are environment variables. See `.env.example` for the full l
 
 ### OpenAPI-first
 `lib/api-spec/openapi.yaml` is the single source of truth for the API contract. Orval generates the client hooks (`api-client-react`) and server schemas (`api-zod`) from it. **Never hand-edit generated files** — regenerate with `pnpm --filter @workspace/api-spec run codegen`.
+
+> **Codegen caveat:** the codegen script ends with `pnpm -w run typecheck:libs`,
+> which is not defined in the root `package.json`. Generation succeeds but that
+> final step errors — run `pnpm run typecheck` afterwards instead.
 
 ### Repository pattern
 All database access is routed through `IItemsRepository` (`repositories/items.repository.ts`). This makes it straightforward to swap PostgreSQL for another database — implement the interface, update the singleton export, and no other code changes are needed.
@@ -224,7 +307,12 @@ Base path: `/api`
 | `GET` | `/items/:id` | Get a single item |
 | `PATCH` | `/items/:id` | Partially update an item |
 | `DELETE` | `/items/:id` | Delete an item |
-| `POST` | `/leads` | Join the early-bird waitlist (email) |
+| `POST` | `/leads` | Join the early-bird waitlist (email) — returns `201` |
+
+> **Spec drift:** `lib/api-spec/openapi.yaml` documents the reset endpoint as
+> `POST /session`, but the server implements `POST /session/reset`. The
+> generated reset hook is therefore not wired up; the app relies on automatic
+> first-visit seeding instead.
 
 Full schema: [`lib/api-spec/openapi.yaml`](lib/api-spec/openapi.yaml)
 
@@ -238,9 +326,7 @@ The architecture is designed so the following additions require no major refacto
 - **Notifications** — read from the repository on a schedule; no route changes needed
 - **Import/Export** — add routes that call `findAll()` and reformat the output
 - **Multi-user** — add tenant scoping to the repository interface
-- **Testing** — inject a mock `IItemsRepository`; no real database needed
 - **Docker** — add `Dockerfile` + `docker-compose.yml` at the repo root
-- **CI/CD** — add `.github/workflows/ci.yml` running `pnpm run typecheck`
 
 ---
 
@@ -276,7 +362,9 @@ ExpiryOS follows a milestone-based roadmap to keep development focused while mai
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, branching strategy, commit conventions, and architecture notes.
+[`CONTRIBUTING.md`](CONTRIBUTING.md) is currently **under revamping**. For
+current workflow and commands, see [`AGENTS.md`](AGENTS.md); for architecture
+context, see [`KNOWLEDGE.md`](KNOWLEDGE.md).
 
 ---
 
