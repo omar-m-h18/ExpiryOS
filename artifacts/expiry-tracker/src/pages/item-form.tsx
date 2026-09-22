@@ -25,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { ArrowLeft, Calendar as CalendarIcon, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, Loader2, Save, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -54,7 +54,7 @@ export function ItemForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: item, isLoading: isLoadingItem } = useGetItem(itemId, {
+  const { data: item, isLoading: isLoadingItem, isError: isItemError } = useGetItem(itemId, {
     query: {
       enabled: !isNew && !!itemId,
       queryKey: getGetItemQueryKey(itemId)
@@ -126,6 +126,35 @@ export function ItemForm() {
       });
     }
   };
+
+  if (!isNew && isItemError) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Button
+          variant="ghost"
+          onClick={() => setLocation("/demo/items")}
+          className="pl-0 text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Items
+        </Button>
+
+        <Card>
+          <CardContent className="p-10 flex flex-col items-center text-center gap-3">
+            <AlertCircle className="w-10 h-10 text-destructive" />
+            <h1 className="text-2xl font-display font-semibold">Item not found</h1>
+            <p className="text-muted-foreground max-w-sm">
+              This item may have been deleted, or it belongs to a different demo
+              session. Head back to your items to pick another.
+            </p>
+            <Button onClick={() => setLocation("/demo/items")} className="mt-2">
+              Back to Items
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!isNew && isLoadingItem) {
     return (

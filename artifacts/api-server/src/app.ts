@@ -4,9 +4,19 @@ import cors from "cors";
 import helmet from "helmet";
 import requireSession from "./middlewares/requireSession";
 import { errorHandler } from "./middlewares/error-handler";
+import { createRateLimiter } from "./middlewares/rate-limit";
+import { healthCheck } from "./routes/health";
+import { RATE_LIMIT_MAX_GLOBAL, RATE_LIMIT_WINDOW_MS } from "./config";
 import router from "./routes";
 
 const app = express();
+
+// Exactly one reverse proxy sits in front of us in every deployment
+// (Render's edge, or the Netlify `_redirects` proxy). Trusting one hop makes
+// `req.ip` the real client address from `X-Forwarded-For` instead of the
+// proxy's, which is what the rate limiters key on. Trusting more hops than
+// exist would let a client spoof the header.
+app.set("trust proxy", 1);
 
 app.use(helmet());
 
@@ -49,6 +59,24 @@ app.use(cookieParser());
 
 // Guarantee every request has an ephemeral visitor session ("room").
 app.use(requireSession);
+
+// Coarse safety net across the whole API. Tighter, endpoint-specific limiters
+// live beside the routes they protect (see routes/leads.ts, routes/items.ts,
+// routes/session.ts) so each limit is visible next to its purpose.
+app.use(
+  "/api",
+  createRateLimiter({
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    max: RATE_LIMIT_MAX_GLOBAL,
+  }),
+);
+
+// Platform health probes (e.g. Render's) usually hit `/healthz` at the root,
+// while the API contract exposes it under `/api/healthz`. Serve BOTH so a
+// probe configured either way succeeds instead of 404ing — a failing probe can
+// get the instance recycled. This is deliberately outside the `/api` rate
+// limiter: probes are frequent and legitimate.
+app.get("/healthz", healthCheck);
 
 // FIX #1: Mount everything under /api so it matches the frontend calls
 app.use("/api", router);

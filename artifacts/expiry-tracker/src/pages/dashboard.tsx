@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useGetItemsSummary, useListItems } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, ArrowRight, CheckCircle2, Clock, ShieldAlert, List } from "lucide-react";
@@ -6,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
 import { SpotlightAction } from "@/components/spotlight-action";
 import { formatDate } from "@/lib/utils";
+import { selectNeedsAttention } from "@/lib/select-needs-attention";
 
 export function Dashboard() {
   const { data: summary, isLoading: isLoadingSummary } = useGetItemsSummary();
@@ -20,10 +22,13 @@ export function Dashboard() {
 
   const isLoadingItems = isLoadingExpiring || isLoadingExpired;
 
-  const needsAttentionItems = [
-    ...(expiredItems || []).sort((a, b) => (a.days_remaining ?? Infinity) - (b.days_remaining ?? Infinity)),
-    ...(expiringSoonItems || []).sort((a, b) => (a.days_remaining ?? Infinity) - (b.days_remaining ?? Infinity))
-  ].slice(0, 6);
+  // Selection logic lives in a pure helper because it must NOT mutate the
+  // arrays it is given — they are the objects held in the React Query cache,
+  // and `Array.prototype.sort` sorts in place.
+  const needsAttentionItems = useMemo(
+    () => selectNeedsAttention(expiredItems ?? [], expiringSoonItems ?? []),
+    [expiredItems, expiringSoonItems],
+  );
 
   const viewAllHref = (expiredItems && expiredItems.length > 0) 
     ? "/demo/items?status=expired" 

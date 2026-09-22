@@ -9,7 +9,7 @@
  * @module lib/seed
  */
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, itemsTable } from "@workspace/db";
 import { generateSampleItems } from "./sample-data";
 
@@ -17,6 +17,8 @@ import { generateSampleItems } from "./sample-data";
 const inFlightSeeds = new Map<string, Promise<void>>();
 
 async function seedForOwner(ownerId: string): Promise<void> {
+  // Fast path: most calls are for rooms that already have data, so avoid
+  // opening a transaction just to discover that.
   const existing = await db
     .select({ id: itemsTable.id })
     .from(itemsTable)
@@ -36,6 +38,24 @@ async function seedForOwner(ownerId: string): Promise<void> {
   }));
 
   await db.transaction(async (tx) => {
+    // Serialize seeding per room across *processes*. The in-memory
+    // `inFlightSeeds` map above only dedupes within a single instance, so two
+    // replicas (or two workers) serving a cold visitor at the same moment
+    // could both pass the check above and insert 8 rows each. This
+    // transaction-scoped advisory lock makes the re-check below authoritative;
+    // Postgres releases it automatically on commit or rollback.
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${ownerId}))`);
+
+    const alreadySeeded = await tx
+      .select({ id: itemsTable.id })
+      .from(itemsTable)
+      .where(eq(itemsTable.ownerId, ownerId))
+      .limit(1);
+
+    if (alreadySeeded.length > 0) {
+      return;
+    }
+
     await tx.insert(itemsTable).values(rows);
   });
 }

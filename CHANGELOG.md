@@ -7,6 +7,123 @@ This project follows [Semantic Versioning](https://semver.org/) and
 
 ---
 
+## [Unreleased] — Security, resilience & correctness hardening
+
+> Scope: a production code review of the API, database layer, and SPA. The
+> headline work is making the anonymous-session cookie unforgeable, bounding
+> the anonymous write surface, and closing several input-validation gaps that
+> turned client mistakes into 500s (or, worse, into silently wrong data).
+
+### Added
+- **Rate limiting** (`middlewares/rate-limit.ts`): a dependency-free
+  fixed-window limiter with bounded memory (oldest-key eviction), an injectable
+  clock, and a custom key function. Wired as a coarse 300 req/min per-IP net
+  across `/api`, plus tighter per-route buckets: **5/min** for the public
+  waitlist, **10/min** for session resets, **60/min** for item creation.
+- **Per-room item cap** (`MAX_ITEMS_PER_OWNER`, default 100): `POST /api/items`
+  now returns `409` once a room is full, backed by a new indexed
+  `itemsRepository.count()`. Each anonymous room was previously free storage.
+- **Session cookie signing** (`lib/session.ts`): the `expiryos_demo` cookie is
+  now `<uuid>.<base64url HMAC-SHA256>`, verified in constant time. Prevents a
+  visitor who learns another's room id from reading, modifying, or (via
+  `POST /api/session/reset`) deleting that room. **`SESSION_SECRET` is required
+  in production**; the API refuses to boot without it.
+- **Input validation** (`lib/validation.ts`): `expiration_date` must be a real
+  calendar date in `YYYY-MM-DD` form (rejects both `"banana"` and the
+  roll-over date `2026-02-31`), with length limits on title/category/notes and
+  the `search` parameter. Also escapes LIKE metacharacters so a search for `%`
+  matches a literal percent instead of every row.
+- **Database indexes** (`schema/items.ts`): a composite
+  `(owner_id, expiration_date)` index serves every item query — owner-scoped
+  lookups via its leftmost prefix, and the list query's filter+sort without a
+  sequential scan or a separate sort step.
+- **Graceful shutdown** (`index.ts`): `SIGTERM`/`SIGINT` stop accepting
+  connections, drain in-flight requests, close the pool, and exit — with a
+  10-second cap and idempotent handling. Render sends `SIGTERM` on every deploy.
+- **Root health endpoint**: `GET /healthz` is now served at the root in
+  addition to `/api/healthz`, so a platform probe configured either way
+  succeeds instead of 404ing (a failing probe can recycle the instance).
+- **Tests**: `rate-limit.test.ts`, `session.test.ts`, `validation.test.ts`.
+  The DB-backed owner-isolation suite gained coverage for `update`, `count`,
+  `getSummary`, and empty-patch handling.
+
+### Changed
+- **Seeding runs once per room** (`middlewares/requireSession.ts`,
+  `lib/session.ts`): `ensureSession` now reports whether it minted a room, and
+  only new rooms are seeded. Previously every request fire-and-forgot a seed
+  check, which cost a database round-trip per request and let a client trigger
+  sample-data inserts just by presenting a fresh cookie value.
+- **First paint is no longer racy**: the brand-new-room seed is awaited before
+  the request proceeds, so the dashboard can't render an empty room and never
+  refetch. If seeding fails, the room cookie is cleared so the next request
+  retries with a fresh room instead of stranding the visitor.
+- **Cross-replica seeding is safe** (`lib/seed.ts`): the in-memory in-flight
+  map only dedupes within one process, so seeding now takes a
+  transaction-scoped `pg_advisory_xact_lock` and re-checks inside the
+  transaction — two replicas can no longer each insert a room's 8 sample rows.
+- **Error handler honours the error's status** (`middlewares/error-handler.ts`):
+  malformed JSON returns `400` (previously `500`) and oversized bodies `413`,
+  with 4xx logged at `warn` and 5xx at `error` via Pino. Responses stay generic
+  so internal details never leak.
+- **Database TLS verification is ON by default** (`lib/db/src/ssl.ts`): the
+  previous "any non-localhost URL gets `rejectUnauthorized: false`" rule
+  silently disabled certificate verification for every deployment. Opting out
+  now requires an explicit `DATABASE_SSL_REJECT_UNAUTHORIZED=false`. Local host
+  detection parses the URL, so `localhost.example.com` is correctly treated as
+  remote.
+- **Fetch client retry policy** (`custom-fetch.ts`): only *quick* network
+  failures are retried. A request that already consumed the 60-second timeout
+  is no longer retried, which previously doubled a cold-boot wait to 120s.
+- **Dashboard no longer mutates cached data** (`pages/dashboard.tsx`,
+  `lib/select-needs-attention.ts`): the "Needs Attention" selection sorts
+  *copies*, so it can't reorder the arrays held in the React Query cache.
+- **UI thresholds no longer drift** (`components/spotlight-action.tsx`,
+  `components/status-badge.tsx`): the spotlight uses the server's own
+  `expiring_this_week` count instead of re-deriving a hard-coded 7-day window.
+- **Search is debounced** (`hooks/use-debounced-value.ts`): the items list
+  waits 300 ms after typing stops, instead of firing an unindexed `%term%` scan
+  per keystroke.
+- **Filters track the URL** (`hooks/use-item-filters.ts`, `lib/item-filters.ts`):
+  wouter matches on pathname only, so `?status=expired` → `/demo/items` never
+  remounted the list and left the filter stuck. Status is now re-synced from
+  the query string.
+- **`openapi.yaml`**: `expiration_date` gained a `pattern` and the text fields
+  `maxLength` constraints, plus `maxLength` on `search`. Deliberately
+  `pattern`, not `format: date` — the Orval config sets `useDates: true` with
+  `coerce.body: ['bigint','date']`, so `format: date` would generate
+  `zod.coerce.date()` and hand the repository a `Date` instead of the
+  `YYYY-MM-DD` string its column expects. **Run codegen to pick this up.**
+
+### Fixed
+- **Malformed dates no longer 500 or lie**: `"banana"` previously reached the
+  Postgres `date` column and threw. Worse, an unparseable date is parsed to
+  `NaN` by `computeStatus`, and every comparison against `NaN` is false — so a
+  malformed item would have been classified as **`active`** ("not expiring").
+  Input now fails closed with a `400`.
+- **`PATCH /api/items/:id` with an empty body** returned `500`
+  (`No values to set` from Drizzle). Now a `400`, guarded at both the route and
+  the repository.
+- **Duplicate re-exports** removed from `lib/api-zod/src/index.ts`.
+- **Edit form shows "Item not found"** instead of a blank form when the item is
+  gone or belongs to another room.
+
+### Notes
+- **Upgrade notes:**
+  1. **Set `SESSION_SECRET` in production** (Render → service → Environment).
+     Generate with `openssl rand -base64 32`. The API will not start without it.
+  2. Existing unsigned room cookies are rejected on deploy, so in-flight
+     visitors get a fresh room. Expected for ephemeral demo rooms.
+  3. Apply the new index with `pnpm --filter @workspace/db run push`.
+  4. Re-run codegen for the `openapi.yaml` constraints.
+  5. If the DB connection fails after upgrading, set
+     `DATABASE_SSL_REJECT_UNAUTHORIZED=false` — TLS verification is now on by
+     default.
+- **Not changed (deliberately):** no pagination on `GET /api/items` (the
+  100-item room cap already bounds the payload) and no threshold values added
+  to the OpenAPI spec (needs codegen). Both are noted in the review.
+
+---
+
 ## [Unreleased] — Docs & CI & production hardening
 
 ### Added

@@ -70,25 +70,50 @@ Every visitor gets a **private room** identified by a random UUID stored in an
 the browser (or a private window) closes — a truly ephemeral per-visitor demo
 with **zero accounts**. The cookie is `secure` only in production.
 
+### The cookie is SIGNED — `SESSION_SECRET` is required in production
+`ownerId` is the tenancy key for every item query, so the cookie is not just a
+claimed UUID. It is `<uuid>.<base64url HMAC-SHA256>` and the signature is
+verified in constant time before the id is trusted. Without this, a client that
+learned another visitor's room id could set it as its own cookie and read,
+modify, or (via `POST /api/session/reset`) delete that room's data.
+
+Consequences worth knowing:
+- **The API refuses to start in production without `SESSION_SECRET`.** Generate
+  one with `openssl rand -base64 32` and set it in Render's Environment tab.
+  Development and test fall back to a fixed, clearly-insecure dev secret.
+- **Changing `SESSION_SECRET` invalidates every existing room.** Harmless for
+  ephemeral demo rooms, but it is a visible reset.
+- **Each environment needs its own secret** — otherwise a staging room would be
+  valid on production.
+
 ### Request lifecycle
-1. `requireSession` middleware runs on every `/api/*` request.
-2. It calls `ensureSession(req, res)` → reads the cookie or mints a new UUID,
-   and sets `req.ownerId`.
-3. It fires **best-effort, fire-and-forget** sample-data seeding:
-   `void seedSessionIfNew(ownerId)` (idempotent — no-op if the room already has
-   any item; concurrent callers share one in-flight promise).
+1. `requireSession` middleware runs on every request.
+2. It calls `ensureSession(req, res)` → verifies the signed cookie, or mints a
+   new UUID and sets a fresh signed cookie. Returns `{ ownerId, isNew }`.
+3. **Only when `isNew` is true** does it seed sample data, and it **awaits** the
+   seed before calling `next()`.
 4. Routes/repositories then read/write rows scoped by `req.ownerId`.
 
 ### Sample data (single automatic path)
-Sample data is seeded **only** by the first-visit auto-seed above, which runs
-**fire-and-forget** and does **not block** the response. On a cold device the
-first `GET /items` can reach the DB before the seed's inserts land, so the
-dashboard can render **empty on first paint** and never refetch. The seed
-completes in the background, but the UI already drew.
+Sample data is seeded **only** when a request mints a brand-new room, and the
+seed is awaited before the request proceeds. Two earlier behaviours were fixed:
 
-> **Gotcha / known gap:** the first-visit auto-seed is racy — a cold device can
-> see an empty list. If you're debugging "why no sample data on another device,"
-> this is the usual culprit, not the schema.
+- Seeding used to be fire-and-forget, so a cold first `GET /items` could return
+  before the inserts landed and the dashboard rendered **empty on first paint**
+  with no refetch. Now the first response already includes the sample rows.
+- Seeding used to run on *every* request (a cheap "does this room have items?"
+  check), which meant a database round-trip per request and let a client trigger
+  sample-data inserts just by presenting a fresh cookie value.
+
+> **Gotcha:** if seeding fails, the middleware clears the room cookie so the next
+> request mints a fresh room and retries, rather than stranding the visitor in a
+> permanently empty room. So a seeding failure manifests as "the room resets"
+> rather than as an error message.
+
+> **Cross-replica gotcha:** the in-memory in-flight-seed map only dedupes within
+> one process. Seeding therefore takes a transaction-scoped
+> `pg_advisory_xact_lock(hashtext(ownerId))` and re-checks inside the
+> transaction, so two API replicas cannot each insert a room's 8 rows.
 
 > **Unused endpoint:** `POST /api/session/reset` (`routes/session.ts`) issues a
 > fresh room id, overwrites the cookie, deletes the old owner's rows, and
@@ -96,6 +121,48 @@ completes in the background, but the UI already drew.
 > frontend has **no in-app reset/"Start a sample" control** (`demo.ts` and
 > `demo-banner.tsx` explicitly state this), so nothing currently calls it. The
 > endpoint is kept for future use; don't assume the UI uses it.
+
+### Abuse limits (all env-tunable)
+The demo is anonymous, so every request can persist rows. Bounds live in
+`config/index.ts` and are documented in `.env.example`:
+
+| Limit | Default | Enforced by |
+|---|---|---|
+| Items per room | 100 | `POST /items` → `409` |
+| Requests/IP/window across `/api` | 300 | global limiter in `app.ts` |
+| Waitlist signups/IP/window | 5 | `routes/leads.ts` |
+| Session resets/IP/window | 10 | `routes/session.ts` |
+| Item creations/IP/window | 60 | `routes/items.ts` |
+
+> **Gotcha:** the limiter keeps counters **in process memory**. Behind multiple
+> API replicas the effective limit is `max × replicas`. Move the counters to a
+> shared store (Redis) before scaling horizontally.
+>
+> **Gotcha:** the limiters key on `req.ip`, which is only the real client
+> address because `app.ts` sets `trust proxy` to exactly `1`. If you add another
+> proxy hop, that must be raised, or every client collapses into one bucket (and
+> a spoofed `X-Forwarded-For` becomes possible).
+
+---
+
+## 3a. Input validation `lib/validation.ts`
+
+- `expiration_date` must be a **real calendar date** in `YYYY-MM-DD` form.
+  `isValidDateOnly` rejects malformed strings *and* impossible dates such as
+  `2026-02-31` (which `Date.parse` silently rolls into March).
+- **Why this is hand-written rather than `format: date` in the spec:** the Orval
+  config sets `useDates: true` with `coerce.body: ['bigint','date']`, so
+  `format: date` would generate `zod.coerce.date()` and hand the repository a
+  `Date` object instead of the `YYYY-MM-DD` string its column expects. The spec
+  uses `pattern`/`maxLength` instead; this module enforces at runtime.
+- **Why it fails closed:** `computeStatus` parses with
+  `new Date(\`${date}T00:00:00\`)`. For `"banana"` that is `NaN`, and *every*
+  comparison against `NaN` is false — so the item would be classified
+  **`active`**, i.e. reported as "not expiring". Failing closed matters more
+  than the error code.
+- `escapeLikePattern` escapes `\`, `%`, and `_` so a search term is matched
+  literally. Without it, searching for `%` matched every row. The surrounding
+  wildcards the repository adds are intentional.
 
 ---
 
@@ -152,20 +219,58 @@ Netlify publishes Vite's `dist/public` (which also contains `_redirects`).
   rather than creating a broken pool. It also sets `connectionTimeoutMillis` /
   `query_timeout` / `idleTimeoutMillis` so a dead DB fails fast instead of
   hanging requests (which read as "site loads slowly").
+- **TLS verification is ON by default** (`lib/db/src/ssl.ts`). Previously any
+  non-localhost URL got `rejectUnauthorized: false`, which silently disabled
+  certificate verification for every deployment. Opting out now requires an
+  explicit `DATABASE_SSL_REJECT_UNAUTHORIZED=false`. Localhost detection parses
+  the URL, so `localhost.example.com` is correctly treated as **remote**.
+- `closeDb()` closes the pool; `index.ts` calls it during graceful shutdown.
 - Schema lives in `lib/db/src/schema/*` (items, leads). Migrations are applied
   with `pnpm --filter @workspace/db run push` (Drizzle Kit) against Neon.
+- **Indexes:** `items` has a composite
+  `items_owner_id_expiration_date_idx` on `(owner_id, expiration_date)`. It
+  serves owner-scoped lookups via its leftmost prefix *and* the list query's
+  filter+sort, so no sequential scan and no separate sort step. Run `push` to
+  create it.
+  > **Not indexed:** the `search` `ILIKE '%term%'` path cannot use a btree
+  > index. That would need a `pg_trgm` GIN index, which drizzle-kit does not
+  > create for us. Search is therefore bounded by the per-room item cap and the
+  > client-side debounce rather than by an index.
+
+### Health checks
+`GET /healthz` is served at **both** the root and `/api/healthz` (`app.ts`
+mounts the shared `healthCheck` handler in both places). Platform probes
+configured either way succeed instead of 404ing — a failing probe can get the
+instance recycled. The root route is deliberately outside the `/api` rate
+limiter, since probes are frequent and legitimate.
+
+### Graceful shutdown
+`index.ts` handles `SIGTERM`/`SIGINT`: stop accepting connections, drain
+in-flight requests, close the DB pool, exit `0`. Capped at 10 seconds, and
+idempotent (a second signal is ignored). Render sends `SIGTERM` on every deploy,
+so without this the process was killed mid-request and its pooled connections
+dropped. A bind failure (e.g. `EADDRINUSE`) logs at `fatal` and exits `1`
+instead of dying silently.
 
 ### Env vars (see `.env.example`)
 | Variable | Purpose |
 |---|---|
 | `DATABASE_URL` | **Required.** Neon/Postgres connection string |
+| `SESSION_SECRET` | **Required in production.** Signs the session cookie; the API refuses to start without it |
+| `DATABASE_SSL_REJECT_UNAUTHORIZED` | Set to exactly `"false"` to disable DB TLS verification (default: verification on) |
 | `PORT` | API port |
-| `NODE_ENV` | `production` → JSON logging |
+| `NODE_ENV` | `production` → JSON logging, secure cookies, required secrets |
 | `LOG_LEVEL` | Pino level |
 | `EXPIRING_SOON_DAYS` | default 30 |
 | `EXPIRING_THIS_WEEK_DAYS` | default 7 |
 | `APP_NAME` | logging name |
 | `FRONTEND_URL` | **Required in production.** CORS allow-list; the API refuses to start without it |
+| `MAX_ITEMS_PER_OWNER` | default 100 |
+| `RATE_LIMIT_WINDOW_MS` | default 60000 |
+| `RATE_LIMIT_MAX_GLOBAL` | default 300 |
+| `RATE_LIMIT_MAX_LEADS` | default 5 |
+| `RATE_LIMIT_MAX_RESET` | default 10 |
+| `RATE_LIMIT_MAX_ITEM_WRITES` | default 60 |
 
 ---
 
@@ -283,12 +388,32 @@ red.
 - **DB-backed owner isolation tests:** gated by `RUN_DB_TESTS=1` + a real
   `DATABASE_URL`. They run in CI (Postgres is provisioned); locally they skip
   unless you set both.
-- **Logs:** production uses structured JSON via Pino (`NODE_ENV=production`).
-  The api-server returns JSON errors (HTTP 400/401/404/500) via a global error
-  handler; Zod validation failures include a `details` object.
+- **Logs:** production uses structured JSON via Pino (`NODE_ENV=production`)
+  through the shared logger in `lib/logger.ts`. The api-server returns JSON
+  errors via a global error handler that **honours the error's `status`**: a
+  malformed JSON body is a `400` and an oversized body a `413` (both were
+  reported as `500` before), with 4xx logged at `warn` and 5xx at `error`.
+  Responses stay generic so internal details never leak. Zod validation failures
+  include a `details` object.
 - **204 responses:** `DELETE /api/items/:id` returns `204 No Content` with an
   empty body. The client's `parseResponse` special-cases 204/205 — do not add an
   unconditional `response.json()` or the delete toast will regress.
+- **Client retries:** `custom-fetch.ts` retries exactly once, and only on a
+  *quick* network failure (Render cold-booting and dropping the first
+  connection). It deliberately does **not** retry after a request has consumed
+  the 60-second timeout — doing so doubled a cold-boot wait to 120s. HTTP errors
+  and caller aborts are never retried.
+- **UI thresholds:** the spotlight CTA uses the server's `expiring_this_week`
+  count rather than re-deriving a 7-day window in the browser, so changing
+  `EXPIRING_THIS_WEEK_DAYS` cannot desync the UI. `StatusBadge`'s 60-day
+  countdown cap is a *display* choice only — it is not an expiry threshold.
+- **List filters live in the URL:** wouter matches on pathname only, so
+  `?status=expired` → `/demo/items` does **not** remount the list.
+  `useItemFilters` re-syncs `status` from the query string on every change; the
+  parsing itself is a pure function in `lib/item-filters.ts`.
+- **Search is debounced** (300 ms, `hooks/use-debounced-value.ts`) and LIKE
+  metacharacters are escaped server-side. Both exist because each request is an
+  unindexed `%term%` scan.
 - **Stale historical reports:** `CI_INCIDENT_LOG.md`,
   `DELETE_BUTTON_INVESTIGATION.md`, and `IMPLEMENTATION_PLAN.md` are
   point-in-time records kept for history; they may describe superseded states.

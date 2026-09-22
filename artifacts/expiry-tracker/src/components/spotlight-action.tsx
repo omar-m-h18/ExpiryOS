@@ -1,22 +1,26 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-
-/** Number of days that count as "expiring this week". Kept in sync with the server-side threshold. */
-const EXPIRING_THIS_WEEK_DAYS = 7;
+import { pickSoonestItem } from "@/lib/select-needs-attention";
 
 interface SpotlightActionProps {
-  /** Raw expiring_soon items returned by the API; the component filters the subset expiring this week. */
+  /** Raw `expiring_soon` items returned by the API. */
   items: Array<{ id: string; days_remaining?: number | null }> | undefined;
-  /** The dashboard summary count for expiring this week (for a quick zero check). */
+  /** The server's count of items inside its own "expiring this week" window. */
   count: number;
 }
 
 /**
  * Spotlight call-to-action button.
  *
- * - If exactly one item expires this week, jump directly to that item's edit page.
- * - If more than one item expires this week, go to the filtered "Expiring Soon" list.
- * - If nothing is expiring this week, go to the full items list.
+ * - Nothing in the window → the full items list.
+ * - Exactly one item in the window → straight to that item's edit page.
+ * - More than one → the filtered "Expiring Soon" list.
+ *
+ * The window's size is deliberately unknown here. `count` is computed by the
+ * server from `EXPIRING_THIS_WEEK_DAYS`, so re-deriving the window in the
+ * browser would drift whenever that setting changes (e.g. `count === 1` while
+ * a hard-coded 7-day filter finds zero items). When the server reports exactly
+ * one item in the window, that item is simply the soonest non-expired one.
  */
 export function SpotlightAction({ items, count }: SpotlightActionProps) {
   if (count === 0) {
@@ -29,24 +33,17 @@ export function SpotlightAction({ items, count }: SpotlightActionProps) {
     );
   }
 
-  const thisWeekItems =
-    items?.filter(
-      (item) =>
-        item.days_remaining !== undefined &&
-        item.days_remaining !== null &&
-        item.days_remaining >= 0 &&
-        item.days_remaining <= EXPIRING_THIS_WEEK_DAYS,
-    ) ?? [];
-
-  if (thisWeekItems.length === 1) {
-    const target = `/demo/items/${thisWeekItems[0].id}/edit`;
-    return (
-      <Link href={target} className="mt-2 w-full">
-        <Button variant="secondary" className="w-full">
-          View Item
-        </Button>
-      </Link>
-    );
+  if (count === 1) {
+    const onlyItem = pickSoonestItem(items);
+    if (onlyItem) {
+      return (
+        <Link href={`/demo/items/${onlyItem.id}/edit`} className="mt-2 w-full">
+          <Button variant="secondary" className="w-full">
+            View Item
+          </Button>
+        </Link>
+      );
+    }
   }
 
   return (

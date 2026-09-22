@@ -22,9 +22,10 @@
  * @module repositories/items.repository
  */
 
-import { eq, ilike, or, and, asc, desc } from "drizzle-orm";
+import { eq, ilike, or, and, asc, desc, count } from "drizzle-orm";
 import { db, itemsTable } from "@workspace/db";
 import { EXPIRING_THIS_WEEK_DAYS } from "../config";
+import { escapeLikePattern } from "../lib/validation";
 import {
   computeStatus,
   enrichItem,
@@ -95,6 +96,15 @@ export interface IItemsRepository {
 
   /** Compute aggregate status counts across all items for an owner. */
   getSummary(ownerId: string): Promise<ItemsSummary>;
+
+  /**
+   * Count items owned by `ownerId`.
+   *
+   * Used to enforce the per-room storage cap on creation, so it must be
+   * cheap — it is a `COUNT(*)` on the indexed `owner_id` column, not a fetch
+   * of the rows themselves.
+   */
+  count(ownerId: string): Promise<number>;
 }
 
 // ---------------------------------------------------------------------------
@@ -115,9 +125,14 @@ class DrizzleItemsRepository implements IItemsRepository {
     const conditions = [eq(itemsTable.ownerId, ownerId)];
 
     if (search) {
+      // Escape LIKE metacharacters so the term is matched literally. Without
+      // this, `%` matches every row and `_` matches any single character — the
+      // user's text would be interpreted as a pattern. The surrounding `%`
+      // wildcards are ours; the text in between is the user's.
+      const pattern = `%${escapeLikePattern(search)}%`;
       const searchFilter = or(
-        ilike(itemsTable.title, `%${search}%`),
-        ilike(itemsTable.category, `%${search}%`),
+        ilike(itemsTable.title, pattern),
+        ilike(itemsTable.category, pattern),
       );
       if (searchFilter) {
         conditions.push(searchFilter);
@@ -182,6 +197,14 @@ class DrizzleItemsRepository implements IItemsRepository {
     if (data.expiration_date !== undefined) patch.expirationDate = data.expiration_date;
     if (data.notes !== undefined) patch.notes = data.notes ?? null;
 
+    // Defence in depth: an empty patch would produce an empty SQL SET clause,
+    // which Drizzle rejects with "No values to set". The route rejects this
+    // case with a 400 first; returning the current item keeps the repository
+    // contract safe for any other caller instead of throwing a 500.
+    if (Object.keys(patch).length === 0) {
+      return this.findById(ownerId, id);
+    }
+
     const [row] = await db
       .update(itemsTable)
       .set(patch)
@@ -227,6 +250,15 @@ class DrizzleItemsRepository implements IItemsRepository {
     }
 
     return { total: rows.length, active, expiring_soon, expired, expiring_this_week };
+  }
+
+  async count(ownerId: string): Promise<number> {
+    const [row] = await db
+      .select({ total: count() })
+      .from(itemsTable)
+      .where(eq(itemsTable.ownerId, ownerId));
+
+    return row?.total ?? 0;
   }
 }
 

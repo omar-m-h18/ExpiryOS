@@ -109,21 +109,35 @@ const performRequest = async <T>(
   }
 };
 
+/**
+ * A failure this quick means the connection was dropped or refused — a cold
+ * Render instance or a transient network blip. Slower failures are real.
+ */
+const QUICK_FAILURE_MS = 5_000;
+
 export const customFetch = async <T>(url: string, options: RequestInit): Promise<T> => {
   const baseUrl = getBaseUrl();
+  const startedAt = Date.now();
 
   try {
     return await performRequest<T>(url, options, baseUrl);
   } catch (err) {
-    // Retry exactly once on a network-level failure (Render cold-boot dropping
-    // the first request, transient DNS/TLS hiccup, or our own timeout). Do NOT
-    // retry when the server answered with an HTTP error (4xx/5xx) or when a
-    // caller-supplied signal aborted the request — those outcomes are final.
+    // Retry exactly once, but only on a *quick* network-level failure: Render's
+    // free instance cold-booting and dropping the first connection, or a
+    // transient DNS/TLS hiccup.
+    //
+    // Deliberately NOT retried:
+    //   - HTTP errors (4xx/5xx) — the server answered; the outcome is final.
+    //   - A caller-supplied signal aborting the request.
+    //   - A failure that already burned the full request timeout: the caller
+    //     has waited long enough, and retrying would double the wait to 120s.
     const name = (err as { name?: string } | null)?.name;
     const abortingCaller = options.signal?.aborted === true;
-    const isNetwork = err instanceof TypeError || (name === "AbortError" && !abortingCaller);
+    const isNetwork =
+      err instanceof TypeError || (name === "AbortError" && !abortingCaller);
+    const failedQuickly = Date.now() - startedAt < QUICK_FAILURE_MS;
 
-    if (!isNetwork) {
+    if (!isNetwork || !failedQuickly) {
       throw err;
     }
 

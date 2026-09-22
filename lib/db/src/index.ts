@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { resolveSslConfig } from "./ssl";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -15,11 +16,10 @@ if (!connectionString) {
 
 const pool = new Pool({
   connectionString,
-  ssl:
-    typeof connectionString === "string" &&
-    !connectionString.includes("localhost")
-      ? { rejectUnauthorized: false }
-      : false,
+  // TLS verification is ON by default for remote hosts. Set
+  // DATABASE_SSL_REJECT_UNAUTHORIZED=false only if your provider presents a
+  // chain Node cannot verify. See ./ssl.ts.
+  ssl: resolveSslConfig(connectionString, process.env.DATABASE_SSL_REJECT_UNAUTHORIZED),
   // Give the pool sane timeouts so a dead/unreachable DB doesn't make every
   // request hang and read as "slow" — fail the query fast with a real error.
   connectionTimeoutMillis: 10_000,
@@ -28,6 +28,16 @@ const pool = new Pool({
 });
 
 export const db = drizzle(pool);
+
+/**
+ * Close the connection pool.
+ *
+ * Called during graceful shutdown so a deploy/restart does not leak
+ * connections or leave the pool's sockets dangling.
+ */
+export async function closeDb(): Promise<void> {
+  await pool.end();
+}
 
 export * from "./schema";
 

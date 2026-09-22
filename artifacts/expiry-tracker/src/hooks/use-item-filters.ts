@@ -1,16 +1,22 @@
 /**
  * useItemFilters — manages filter and sort state for the items list.
  *
- * Extracts URL-driven initial state and provides stable setters so the
- * items list page stays focused on rendering rather than state management.
+ * The `status` filter is derived from the URL and kept in step with it.
+ * wouter matches on pathname only, so navigating from
+ * `/demo/items?status=expired` to `/demo/items` does **not** remount the list
+ * component. Without an explicit re-sync the initial state would be computed
+ * once and then go stale — which is why clicking "All Items" in the nav failed
+ * to clear an active filter.
  *
  * @module hooks/use-item-filters
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearch } from "wouter";
+import { parseStatusParam } from "@/lib/item-filters";
+import type { FilterStatus, SortDirection } from "@/lib/item-filters";
 
-export type FilterStatus = "all" | "active" | "expiring_soon" | "expired";
-export type SortDirection = "asc" | "desc";
+export type { FilterStatus, SortDirection };
 
 export interface ItemFilters {
   search: string;
@@ -19,17 +25,6 @@ export interface ItemFilters {
   setSearch: (value: string) => void;
   setStatus: (value: FilterStatus) => void;
   toggleSort: () => void;
-}
-
-/**
- * Reads the initial `status` filter from the URL search params so that links
- * like `/items?status=expired` pre-filter the list on arrival.
- */
-function getInitialStatus(): FilterStatus {
-  if (typeof window === "undefined") return "all";
-  const param = new URLSearchParams(window.location.search).get("status");
-  const valid: FilterStatus[] = ["all", "active", "expiring_soon", "expired"];
-  return valid.includes(param as FilterStatus) ? (param as FilterStatus) : "all";
 }
 
 /**
@@ -43,11 +38,22 @@ function getInitialStatus(): FilterStatus {
  * ```
  */
 export function useItemFilters(): ItemFilters {
+  const urlSearch = useSearch();
+
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<FilterStatus>(getInitialStatus);
+  const [status, setStatus] = useState<FilterStatus>(() =>
+    parseStatusParam(urlSearch),
+  );
   const [sort, setSort] = useState<SortDirection>("asc");
 
-  const toggleSort = () => setSort((prev) => (prev === "asc" ? "desc" : "asc"));
+  // Re-sync whenever the URL's query string changes, including query-only
+  // navigations that leave this component mounted.
+  useEffect(() => {
+    setStatus(parseStatusParam(urlSearch));
+  }, [urlSearch]);
+
+  const toggleSort = () =>
+    setSort((previous) => (previous === "asc" ? "desc" : "asc"));
 
   return { search, status, sort, setSearch, setStatus, toggleSort };
 }

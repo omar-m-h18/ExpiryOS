@@ -31,13 +31,16 @@ ExpiryOS — pnpm workspace monorepo: an OpenAPI-first Express 5 API plus a Reac
 
 - `lib/api-spec/openapi.yaml` is the contract. `lib/api-zod` and `lib/api-client-react/src/generated` are Orval-generated — never hand-edit them.
 - All item data access goes through `IItemsRepository` in `artifacts/api-server/src/repositories/items.repository.ts`; routes import the `itemsRepository` singleton. Every query/mutation is scoped by `ownerId`.
-- Anonymous per-visitor "rooms": `requireSession` mints/reads the `expiryos_demo` HttpOnly cookie → `req.ownerId`, then fire-and-forgets first-visit sample seeding (idempotent — the first `GET /items` can race and render empty). `POST /api/session/reset` awaits reseeding.
+- Anonymous per-visitor "rooms": `requireSession` mints/reads the **signed** `expiryos_demo` HttpOnly cookie → `req.ownerId`, then seeds sample data **only when the room is new**, awaiting it before proceeding (so first paint is never empty). `POST /api/session/reset` awaits reseeding.
+- **`SESSION_SECRET` is required in production** — the API refuses to boot without it; the cookie is an HMAC so rooms can't be forged. Dev/test fall back to a fixed insecure secret.
+- Anonymous rooms are rate-limited and capped (`MAX_ITEMS_PER_OWNER`, default 100) because every request can persist rows. Limits live in `config/index.ts`; the limiter is **in-process** (single-replica only) and relies on `app.set("trust proxy", 1)`.
 - Expiry status (`active` / `expiring_soon` / `expired`) is never stored; it is computed at request time in `lib/status.ts` (`computeStatus` / `enrichItem`). Thresholds live in `src/config/index.ts` — never hard-code them.
 - `lib/db/src/index.ts` throws at startup if `DATABASE_URL` is unset.
 
 ## Env / deploy
 
-- Copy `.env.example` → `.env`; `DATABASE_URL` and `PORT` are required. `FRONTEND_URL` is required in production or the API refuses to start.
+- Copy `.env.example` → `.env`; `DATABASE_URL` and `PORT` are required. `FRONTEND_URL` **and `SESSION_SECRET`** are required in production or the API refuses to start.
+- `DATABASE_SSL_REJECT_UNAUTHORIZED=false` disables DB TLS verification (on by default). Apply the `items` index with `pnpm --filter @workspace/db run push`.
 - Deploy: SPA → Netlify (`netlify.toml`), API → Render. Netlify proxies `/api/*` to Render via `artifacts/expiry-tracker/public/_redirects`.
 - CI (`.github/workflows/ci.yml`): typecheck → `drizzle-kit push` → Vitest, then a Netlify deploy on `main`. Do NOT add `cache: pnpm` to setup-node — it fails before corepack provides pnpm.
 

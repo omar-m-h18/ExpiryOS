@@ -4,8 +4,8 @@
  *
  * Responsibilities:
  *   1. Mint (or reuse) the visitor's session cookie → `req.ownerId`.
- *   2. Best-effort seed of realistic sample data on a brand-new room so the
- *      first paint of the dashboard is never empty.
+ *   2. Seed realistic sample data exactly once, when a brand-new room is
+ *      minted, so the first paint of the dashboard is never empty.
  *
  * This middleware is the "HTTP glue" between the cookie/session layer and the
  * repository layer. It is mounted globally in `app.ts` before the `/api` router.
@@ -14,8 +14,9 @@
  */
 
 import type { Request, Response, NextFunction, RequestHandler } from "express";
-import { ensureSession } from "../lib/session";
+import { clearSession, ensureSession } from "../lib/session";
 import { seedSessionIfNew } from "../lib/seed";
+import { logger } from "../lib/logger";
 
 // Extend Express's Request so `req.ownerId` is available and typed everywhere.
 declare global {
@@ -33,16 +34,34 @@ const requireSession: RequestHandler = (
   res: Response,
   next: NextFunction,
 ): void => {
-  const ownerId = ensureSession(req, res);
+  const { ownerId, isNew } = ensureSession(req, res);
   req.ownerId = ownerId;
 
-  // Fire-and-forget, best-effort seeding so we never block the response.
-  // seedSessionIfNew is idempotent — it no-ops if the room already has items.
-  void seedSessionIfNew(ownerId).catch((err) => {
-    console.error("[requireSession] seeding failed", err);
-  });
+  // Seed ONLY when this request minted the room. Seeding on every request
+  // would (a) cost a database round-trip for existing visitors and (b) let a
+  // client trigger sample-data inserts simply by presenting a fresh cookie
+  // value, which is a cheap way to write rows without an account.
+  if (!isNew) {
+    next();
+    return;
+  }
 
-  next();
+  // Await the seed so the first page load cannot render an empty room: the
+  // dashboard fires its GETs immediately, and a fire-and-forget seed would
+  // race them.
+  seedSessionIfNew(ownerId).then(
+    () => {
+      next();
+    },
+    (err: unknown) => {
+      // Self-heal. The room is still empty, so drop its cookie and let the
+      // next request mint a fresh room and retry, instead of stranding the
+      // visitor in a permanently empty room.
+      logger.error({ err }, "[requireSession] seeding failed; clearing room cookie");
+      clearSession(res);
+      next();
+    },
+  );
 };
 
 export default requireSession;

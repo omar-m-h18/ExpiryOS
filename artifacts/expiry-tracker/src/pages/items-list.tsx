@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { formatDate, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useItemFilters } from "@/hooks/use-item-filters";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { Search, Trash2, Inbox, ArrowUp, ArrowDown } from "lucide-react";
 import {
   AlertDialog,
@@ -30,9 +31,13 @@ export function ItemsList() {
   const [, setLocation] = useLocation();
   const { search, status, sort, setSearch, setStatus, toggleSort } = useItemFilters();
 
+  // Debounce the search box: without this, every keystroke changes the query
+  // key and fires a request, and each request is an unindexed `%term%` scan.
+  const debouncedSearch = useDebouncedValue(search);
+
   const { data: items, isLoading } = useListItems({
-    search: search || undefined,
-    status: status !== "all" ? (status as any) : undefined,
+    search: debouncedSearch || undefined,
+    status: status !== "all" ? status : undefined,
     sort
   });
 

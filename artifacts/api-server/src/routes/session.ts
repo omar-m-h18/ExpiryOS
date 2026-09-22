@@ -11,10 +11,22 @@
 
 import { Router, type IRouter, type Request, type Response } from "express";
 import { randomUUID } from "node:crypto";
-import { SESSION_COOKIE, SESSION_COOKIE_OPTIONS } from "../lib/session";
+import { setSessionCookie } from "../lib/session";
 import { deleteSessionItems, seedSessionIfNew } from "../lib/seed";
+import { createRateLimiter } from "../middlewares/rate-limit";
+import { RATE_LIMIT_MAX_RESET, RATE_LIMIT_WINDOW_MS } from "../config";
 
 const router: IRouter = Router();
+
+/**
+ * Resetting deletes the old room's rows and seeds a brand-new room, so each
+ * call is a delete plus eight inserts. Cap it per IP.
+ */
+const resetLimiter = createRateLimiter({
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: RATE_LIMIT_MAX_RESET,
+  message: "Too many session resets. Please try again later.",
+});
 
 // GET /api/session
 router.get("/session", async (_req: Request, res: Response): Promise<void> => {
@@ -25,15 +37,14 @@ router.get("/session", async (_req: Request, res: Response): Promise<void> => {
 });
 
 // POST /api/session/reset
-router.post("/session/reset", async (req: Request, res: Response): Promise<void> => {
+router.post("/session/reset", resetLimiter, async (req: Request, res: Response): Promise<void> => {
   const oldOwnerId = req.ownerId;
 
   // 1. Issue a brand-new room and write it back to the visitor's cookie.
+  //    The cookie is signed (see lib/session.ts) so the new id cannot be
+  //    forged or swapped on subsequent requests.
   const newOwnerId = randomUUID();
-  res.cookie(SESSION_COOKIE, newOwnerId, {
-    ...SESSION_COOKIE_OPTIONS,
-    // No maxAge → still a session cookie (dies on browser close).
-  });
+  setSessionCookie(res, newOwnerId);
 
   // 2. Drop the old room's data.
   await deleteSessionItems(oldOwnerId);
