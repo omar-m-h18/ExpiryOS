@@ -33,7 +33,8 @@ ExpiryOS/
 │   ├── api-server/          # Express 5 REST API (the backend)
 │   │   └── src/
 │   │       ├── config/      # env-driven thresholds & APP_NAME
-│   │       ├── lib/         # sample-data, seed, session, status, logger
+│   │       ├── lib/         # session, status, logger, validation
+│   │       ├── seed/        # opt-in sample roster (reset endpoint only)
 │   │       ├── middlewares/ # requireSession, error-handler
 │   │       ├── repositories/# IItemsRepository + Drizzle impl, leads
 │   │       └── routes/      # items, leads, session, health, index
@@ -90,37 +91,40 @@ Consequences worth knowing:
 1. `requireSession` middleware runs on every request.
 2. It calls `ensureSession(req, res)` → verifies the signed cookie, or mints a
    new UUID and sets a fresh signed cookie. Returns `{ ownerId, isNew }`.
-3. **Only when `isNew` is true** does it seed sample data, and it **awaits** the
-   seed before calling `next()`.
+3. It assigns `req.ownerId` and calls `next()`. **No database work, no seeding.**
 4. Routes/repositories then read/write rows scoped by `req.ownerId`.
 
-### Sample data (single automatic path)
-Sample data is seeded **only** when a request mints a brand-new room, and the
-seed is awaited before the request proceeds. Two earlier behaviours were fixed:
+`isNew` is still returned by `ensureSession` but is no longer consumed by the
+middleware. It remains part of the `lib/session.ts` contract and is covered by
+`lib/session.test.ts`.
 
-- Seeding used to be fire-and-forget, so a cold first `GET /items` could return
-  before the inserts landed and the dashboard rendered **empty on first paint**
-  with no refetch. Now the first response already includes the sample rows.
-- Seeding used to run on *every* request (a cheap "does this room have items?"
-  check), which meant a database round-trip per request and let a client trigger
-  sample-data inserts just by presenting a fresh cookie value.
+### Sample data (opt-in only — one path)
+**Rooms are not seeded automatically any more.** A cold visitor now costs zero
+writes instead of eight, which is what protects the free database tier's compute
+budget from visitors who only look and never return.
 
-> **Gotcha:** if seeding fails, the middleware clears the room cookie so the next
-> request mints a fresh room and retries, rather than stranding the visitor in a
-> permanently empty room. So a seeding failure manifests as "the room resets"
-> rather than as an error message.
+The example roster still exists in `artifacts/api-server/src/seed/` and is written
+by exactly one call site: `POST /api/session/reset`, which is now wired to the
+empty state's "show me examples" button (`components/first-run/first-run-empty.tsx`).
+That button only renders when the room holds zero items, so it can never destroy
+a visitor's real data.
 
-> **Cross-replica gotcha:** the in-memory in-flight-seed map only dedupes within
-> one process. Seeding therefore takes a transaction-scoped
-> `pg_advisory_xact_lock(hashtext(ownerId))` and re-checks inside the
-> transaction, so two API replicas cannot each insert a room's 8 rows.
+Seeding is still idempotent, because the reset endpoint can be called repeatedly:
 
-> **Unused endpoint:** `POST /api/session/reset` (`routes/session.ts`) issues a
-> fresh room id, overwrites the cookie, deletes the old owner's rows, and
-> re-seeds — and it **awaits** the delete+seed before responding. However, the
-> frontend has **no in-app reset/"Start a sample" control** (`demo.ts` and
-> `demo-banner.tsx` explicitly state this), so nothing currently calls it. The
-> endpoint is kept for future use; don't assume the UI uses it.
+- A fast unlocked `SELECT … LIMIT 1` avoids opening a transaction when the room
+  already holds something.
+- Then a transaction-scoped `pg_advisory_xact_lock(hashtext(ownerId))` plus an
+  in-transaction re-check, so two API replicas cannot each insert a room's rows.
+  The in-memory in-flight map only dedupes within one process; the advisory lock
+  is what makes it correct across replicas.
+
+> **Removed behaviour:** the middleware used to await the seed and clear the room
+> cookie if seeding failed ("self-heal"). Both are gone. Nothing writes on the
+> request path any more, so there is nothing to fail and nothing to retry.
+
+> **API vs web deploy are independent.** The API auto-deploys from `main` (Render
+> git integration), but the web bundle deploys from GitHub Actions. A change to
+> server code can therefore be live while the frontend is still an old build.
 
 ### Abuse limits (all env-tunable)
 The demo is anonymous, so every request can persist rows. Bounds live in
