@@ -117,12 +117,41 @@ jobs:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
 
-      # Proves the deploy actually landed. A 204-safe fetch wrapper in the
-      # bundle is not enough on its own — the site must be serving it.
-      - name: Verify deployed site
+      # Proves the deploy reached expiryos.netlify.app AND that the site is now
+      # serving the exact bundle this run produced.
+      #
+      # The earlier smoke check only asked "is the site up?", which the stale
+      # bundle also answers yes to — that is how a broken deploy passed. This
+      # step reads the bundle filename out of both index.html files and
+      # compares them. A mismatch means the deploy landed on a different
+      # Netlify site than the one serving this domain.
+      - name: Confirm the live site runs the new build
         run: |
+          set -euo pipefail
+
+          built=$(grep -o '/assets/index-[A-Za-z0-9_-]*\.js' \
+            artifacts/expiry-tracker/dist/public/index.html | head -n 1 || true)
+          live=$(curl --fail --silent --show-error \
+            --retry 5 --retry-delay 5 --retry-all-errors \
+            https://expiryos.netlify.app/ \
+            | grep -o '/assets/index-[A-Za-z0-9_-]*\.js' | head -n 1 || true)
+
+          echo "Bundle this build produced: ${built:-<not found>}"
+          echo "Bundle the live site serves: ${live:-<not found>}"
+
+          if [ -z "$built" ] || [ -z "$live" ]; then
+            echo "::error::Could not read a bundle name from the build output or from the live site."
+            exit 1
+          fi
+
+          if [ "$built" != "$live" ]; then
+            echo "::error::The live site serves $live but this build produced $built."
+            echo "::error::The deploy did not reach expiryos.netlify.app. The most likely cause is that NETLIFY_SITE_ID points at a different Netlify site. Compare it with the API ID shown in Netlify under Site settings for expiryos.netlify.app."
+            exit 1
+          fi
+
           curl --fail --silent --show-error \
             --retry 5 --retry-delay 5 --retry-all-errors \
             https://expiryos.netlify.app/api/session
           echo ""
-          echo "::notice::Deployed API is responding."
+          echo "::notice::The live site is serving the bundle from this build, and the API answers."
