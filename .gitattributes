@@ -1,0 +1,28 @@
+# Normalize line endings to LF so Git stops reporting phantom modifications.
+#
+# Without this, `git status` on Windows shows ~200 files as modified while
+# `git diff` reports zero changed lines, which makes every real change
+# unreviewable. `* text=auto eol=lf` records the intent in the repository, so
+# it applies to every clone and not just this machine.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.zip binary
+*.gz binary
+
+# These are explicitly text, so keep them LF like everything else.
+*.svg text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
