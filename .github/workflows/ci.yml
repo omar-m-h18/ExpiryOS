@@ -87,6 +87,19 @@ jobs:
       - name: Build web app
         run: pnpm --filter @workspace/expiry-os run build
 
+      # Tripwire against a silent regression to the known-bad bundle.
+      # index-C2cMtcLG.js shipped a fetch wrapper that called response.json()
+      # unconditionally, so HTTP 204 (returned by DELETE /items/{id}) threw a
+      # SyntaxError and the UI reported "Failed to delete item" even though the
+      # row was deleted. If a build ever produces this hash again, stop here
+      # rather than shipping it. See DELETE_BUTTON_INVESTIGATION.md.
+      - name: Guard against stale bundle
+        run: |
+          if grep -q "index-C2cMtcLG.js" artifacts/expiry-tracker/dist/public/index.html; then
+            echo "::error::Built index.html still references the known-stale bundle index-C2cMtcLG.js"
+            exit 1
+          fi
+
       - name: Deploy to Netlify (production)
         uses: nwtgck/actions-netlify@v3
         with:
@@ -95,6 +108,21 @@ jobs:
           production-deploy: true
           enable-commit-comment: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          # MUST stay true. This action's default is `false`, which makes it
+          # log "Netlify credentials not provided, not deployable" and exit 0 —
+          # a green checkmark for a deploy that never happened. That is how an
+          # August bundle stayed live while CI looked healthy.
+          fails-without-credentials: true
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      # Proves the deploy actually landed. A 204-safe fetch wrapper in the
+      # bundle is not enough on its own — the site must be serving it.
+      - name: Verify deployed site
+        run: |
+          curl --fail --silent --show-error \
+            --retry 5 --retry-delay 5 --retry-all-errors \
+            https://expiryos.netlify.app/api/session
+          echo ""
+          echo "::notice::Deployed API is responding."
