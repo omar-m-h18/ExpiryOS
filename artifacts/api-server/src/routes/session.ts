@@ -4,23 +4,28 @@
  * `GET /session`  → confirms the ephemeral session layer is alive.
  * `POST /session/reset` → starts a brand-new room for the visitor:
  *   the old room's items are deleted, a new session id is issued (overwriting
- *   the cookie), and the new room is immediately seeded with fresh sample
- *   data. This is how the "Start fresh" demo control works without requiring
- *   the visitor to close their browser.
+ *   the cookie), and the new room is seeded with the example roster.
+ *
+ * This is the ONLY path that writes example rows. Rooms are no longer seeded
+ * automatically (see `middlewares/requireSession`), so this endpoint is what
+ * backs the "show me examples" control in the empty state. It is also the
+ * "start fresh" control, which is why it deletes the old room first.
+ *
+ * Because the caller can destroy their own room, the route is rate limited.
  */
 
 import { Router, type IRouter, type Request, type Response } from "express";
 import { randomUUID } from "node:crypto";
 import { setSessionCookie } from "../lib/session";
-import { deleteSessionItems, seedSessionIfNew } from "../lib/seed";
+import { clearRoom, seedRoomIfEmpty } from "../seed";
 import { createRateLimiter } from "../middlewares/rate-limit";
 import { RATE_LIMIT_MAX_RESET, RATE_LIMIT_WINDOW_MS } from "../config";
 
 const router: IRouter = Router();
 
 /**
- * Resetting deletes the old room's rows and seeds a brand-new room, so each
- * call is a delete plus eight inserts. Cap it per IP.
+ * Resetting deletes the old room's rows and inserts eight example rows into a
+ * brand-new room, so each call is a delete plus eight inserts. Cap it per IP.
  */
 const resetLimiter = createRateLimiter({
   windowMs: RATE_LIMIT_WINDOW_MS,
@@ -47,10 +52,11 @@ router.post("/session/reset", resetLimiter, async (req: Request, res: Response):
   setSessionCookie(res, newOwnerId);
 
   // 2. Drop the old room's data.
-  await deleteSessionItems(oldOwnerId);
+  await clearRoom(oldOwnerId);
 
-  // 3. Seed the fresh room so the dashboard isn't empty on the next load.
-  await seedSessionIfNew(newOwnerId);
+  // 3. Seed the fresh room with the example roster. This is the only code
+  //    path that writes sample rows anywhere in the app.
+  await seedRoomIfEmpty(newOwnerId);
 
   res.json({ demo: true, reset: true });
 });

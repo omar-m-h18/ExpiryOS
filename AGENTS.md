@@ -31,7 +31,7 @@ ExpiryOS — pnpm workspace monorepo: an OpenAPI-first Express 5 API plus a Reac
 
 - `lib/api-spec/openapi.yaml` is the contract. `lib/api-zod` and `lib/api-client-react/src/generated` are Orval-generated — never hand-edit them.
 - All item data access goes through `IItemsRepository` in `artifacts/api-server/src/repositories/items.repository.ts`; routes import the `itemsRepository` singleton. Every query/mutation is scoped by `ownerId`.
-- Anonymous per-visitor "rooms": `requireSession` mints/reads the **signed** `expiryos_demo` HttpOnly cookie → `req.ownerId`, then seeds sample data **only when the room is new**, awaiting it before proceeding (so first paint is never empty). `POST /api/session/reset` awaits reseeding.
+- Anonymous per-visitor "rooms": `requireSession` mints/reads the **signed** `expiryos_demo` HttpOnly cookie → `req.ownerId`. It does **no** database work and **no** seeding; new rooms start empty. The example roster lives in `artifacts/api-server/src/seed/` and is written **only** by `POST /api/session/reset`, which backs the empty state's "show me examples" button.
 - **`SESSION_SECRET` is required in production** — the API refuses to boot without it; the cookie is an HMAC so rooms can't be forged. Dev/test fall back to a fixed insecure secret.
 - Anonymous rooms are rate-limited and capped (`MAX_ITEMS_PER_OWNER`, default 100) because every request can persist rows. Limits live in `config/index.ts`; the limiter is **in-process** (single-replica only) and relies on `app.set("trust proxy", 1)`.
 - Expiry status (`active` / `expiring_soon` / `expired`) is never stored; it is computed at request time in `lib/status.ts` (`computeStatus` / `enrichItem`). Thresholds live in `src/config/index.ts` — never hard-code them.

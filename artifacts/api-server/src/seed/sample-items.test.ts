@@ -1,12 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { dayOffsetISO, generateSampleItems } from "./sample-data";
-import { computeStatus } from "./status";
+import { dayOffsetISO } from "./date-offset";
+import { generateSampleItems } from "./sample-items";
+import { computeStatus } from "../lib/status";
 
 /**
- * Sample data must always produce a realistic mix relative to today so a fresh
- * demo room is never empty and always exercises all three statuses.
+ * The example roster must always produce a realistic mix relative to today, so
+ * a visitor who asks for examples sees a populated screen that exercises all
+ * three statuses.
  */
-describe("sample-data", () => {
+describe("sample items", () => {
   const todayISO = () => {
     const d = new Date();
     const y = d.getFullYear();

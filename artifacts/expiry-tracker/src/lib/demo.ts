@@ -2,8 +2,9 @@
  * Thin client helpers for the anonymous-demo endpoints.
  *
  * `insertLead` posts to the early-bird waitlist from the landing page. The
- * legacy "reset sample data" endpoint is intentionally not wired up anymore —
- * sample data is auto-seeded on every fresh room by the backend.
+ * session reset endpoint is called from the empty state's "show me examples"
+ * button instead (see `components/first-run/first-run-empty.tsx`), which uses
+ * the generated `resetSession` client rather than a hand-written fetch.
  *
  * IMPORTANT: In production the frontend (Netlify) and backend (Render) are on
  * different origins, so relative `/api/...` paths would hit Netlify and fail.

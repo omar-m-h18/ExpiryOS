@@ -1,22 +1,30 @@
 /**
  * requireSession — Express middleware that guarantees every request has an
- * ephemeral visitor session.
+ * ephemeral visitor session ("room").
  *
  * Responsibilities:
  *   1. Mint (or reuse) the visitor's session cookie → `req.ownerId`.
- *   2. Seed realistic sample data exactly once, when a brand-new room is
- *      minted, so the first paint of the dashboard is never empty.
  *
  * This middleware is the "HTTP glue" between the cookie/session layer and the
  * repository layer. It is mounted globally in `app.ts` before the `/api` router.
+ *
+ * ## Why there is no seeding here any more
+ *
+ * This middleware used to insert eight example rows into every brand-new room
+ * and wait for that work to finish before continuing. Two problems came from
+ * it: a cold visitor cost eight writes whether or not they ever engaged, and
+ * the wait existed only to keep the first screen from being empty.
+ *
+ * Rooms now start empty and this function does no database work at all. The
+ * example roster still exists in `../seed` and is written only when a visitor
+ * explicitly asks for it via `POST /api/session/reset`. The empty screen is
+ * explained by the UI (`components/first-run`), not by the server.
  *
  * @module middlewares/requireSession
  */
 
 import type { Request, Response, NextFunction, RequestHandler } from "express";
-import { clearSession, ensureSession } from "../lib/session";
-import { seedSessionIfNew } from "../lib/seed";
-import { logger } from "../lib/logger";
+import { ensureSession } from "../lib/session";
 
 // Extend Express's Request so `req.ownerId` is available and typed everywhere.
 declare global {
@@ -34,34 +42,10 @@ const requireSession: RequestHandler = (
   res: Response,
   next: NextFunction,
 ): void => {
-  const { ownerId, isNew } = ensureSession(req, res);
+  // Synchronous by design: minting a room is a signed cookie write, nothing more.
+  const { ownerId } = ensureSession(req, res);
   req.ownerId = ownerId;
-
-  // Seed ONLY when this request minted the room. Seeding on every request
-  // would (a) cost a database round-trip for existing visitors and (b) let a
-  // client trigger sample-data inserts simply by presenting a fresh cookie
-  // value, which is a cheap way to write rows without an account.
-  if (!isNew) {
-    next();
-    return;
-  }
-
-  // Await the seed so the first page load cannot render an empty room: the
-  // dashboard fires its GETs immediately, and a fire-and-forget seed would
-  // race them.
-  seedSessionIfNew(ownerId).then(
-    () => {
-      next();
-    },
-    (err: unknown) => {
-      // Self-heal. The room is still empty, so drop its cookie and let the
-      // next request mint a fresh room and retry, instead of stranding the
-      // visitor in a permanently empty room.
-      logger.error({ err }, "[requireSession] seeding failed; clearing room cookie");
-      clearSession(res);
-      next();
-    },
-  );
+  next();
 };
 
 export default requireSession;

@@ -1,15 +1,20 @@
 /**
- * Realistic sample data for anonymous demo rooms.
+ * The roster of example items offered to a visitor who asks for them.
+ *
+ * Rooms are NOT seeded automatically any more (see `middlewares/requireSession`).
+ * These rows are written only when a visitor explicitly asks for examples via
+ * `POST /api/session/reset`. That keeps the demo cheap for the many visitors who
+ * only look, while still giving anyone who wants a populated screen one click.
  *
  * The critical invariant: every date is computed relative to *today*, so the
- * demo always looks alive regardless of when it's opened — there's always a mix
- * of Active, Expiring-This-Week, Expiring-Soon, and Expired items, and the
- * "needs attention" / "expiring this week" spots on the dashboard light up.
+ * examples always look alive regardless of when they are opened — there is
+ * always a mix of Active, Expiring-Soon, and Expired items.
  *
- * @module lib/sample-data
+ * @module seed/sample-items
  */
 
 import type { CreateItemData } from "../repositories/items.repository";
+import { dayOffsetISO } from "./date-offset";
 
 /** Roster of sample items and their expiry offset from today (in days). */
 interface SampleItemSpec {
@@ -29,26 +34,6 @@ const SAMPLE_SPECS: SampleItemSpec[] = [
   { title: "Passport", category: "Document", offsetDays: -9 },
   { title: "Business Registration", category: "Document", offsetDays: -95 },
 ];
-
-/**
- * Return a `YYYY-MM-DD` string `offsetDays` from today, interpreted as local
- * midnight (matching `lib/status.ts` conventions to avoid UTC off-by-ones).
- *
- * Pure function — safe to unit test.
- *
- * @param offsetDays - number of days to offset from today (may be negative)
- * @returns ISO date string in `YYYY-MM-DD` form
- */
-export function dayOffsetISO(offsetDays: number): string {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + offsetDays);
-
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 /**
  * Build the full set of sample items with today-relative expiration dates.
