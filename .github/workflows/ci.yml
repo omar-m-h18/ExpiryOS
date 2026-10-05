@@ -1,4 +1,4 @@
-name: CI
+﻿name: CI
 
 on:
   push:
@@ -7,7 +7,14 @@ on:
 
 jobs:
   typecheck-and-test:
-    runs-on: ubuntu-latest
+    # Pinned, not `ubuntu-latest`. Two reasons:
+    #  1. `ubuntu-latest` moves to Ubuntu 26 on 2026-10-19, which would change
+    #     the toolchain under us without a commit.
+    #  2. During runner shortages the moving label is the most contended queue;
+    #     a specific version usually has free capacity sooner. A job that cannot
+    #     acquire a runner fails with "not acquired by Runner of type hosted",
+    #     which is what blocked the deploy job on 2026-10-05.
+    runs-on: ubuntu-24.04
     # Ephemeral PostgreSQL so the DB-gated owner-isolation tests actually run
     # on every CI pass (matching the production Postgres on Neon).
     services:
@@ -67,7 +74,7 @@ jobs:
   deploy-netlify:
     needs: typecheck-and-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
