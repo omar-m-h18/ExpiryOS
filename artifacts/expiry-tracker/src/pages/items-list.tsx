@@ -9,6 +9,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
+import { FirstRunEmpty } from "@/components/first-run/first-run-empty";
+import { useRoomIsEmpty } from "@/hooks/use-room-is-empty";
 import { formatDate, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useItemFilters } from "@/hooks/use-item-filters";
@@ -44,6 +46,12 @@ export function ItemsList() {
   const queryClient = useQueryClient();
   const deleteItem = useDeleteItem();
   const { toast } = useToast();
+
+  // Room-wide emptiness, independent of the search box and status tabs below.
+  // A room with items must never show the first-run screen just because the
+  // current filter happens to match nothing.
+  const { isEmpty: isRoomEmpty } = useRoomIsEmpty();
+  const hasActiveFilters = Boolean(search) || status !== "all";
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -201,6 +209,11 @@ export function ItemsList() {
               </div>
             </Card>
           ))
+        ) : isRoomEmpty && !hasActiveFilters ? (
+          /* The room genuinely holds nothing, so explain the product instead of
+             showing a bare "no results" card. Never shown while a filter is
+             active, because then "empty" only means "no matches". */
+          <FirstRunEmpty />
         ) : (
           <Card className="p-12 flex flex-col items-center justify-center text-center">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">

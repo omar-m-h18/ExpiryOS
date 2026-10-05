@@ -80,7 +80,7 @@ export function Landing() {
             <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-left">
               <span className="font-medium text-foreground">This is a live demo.</span>{" "}
-              You get your own private sample data, and it's cleared when you
+              You get your own private room, and it's cleared when you
               close your browser. No signup needed.
             </p>
           </div>

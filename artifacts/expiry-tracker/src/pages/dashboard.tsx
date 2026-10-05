@@ -6,11 +6,14 @@ import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
 import { SpotlightAction } from "@/components/spotlight-action";
+import { FirstRunEmpty } from "@/components/first-run/first-run-empty";
+import { useRoomIsEmpty } from "@/hooks/use-room-is-empty";
 import { formatDate } from "@/lib/utils";
 import { selectNeedsAttention } from "@/lib/select-needs-attention";
 
 export function Dashboard() {
   const { data: summary, isLoading: isLoadingSummary } = useGetItemsSummary();
+  const { isEmpty: isRoomEmpty } = useRoomIsEmpty();
   const { data: expiringSoonItems, isLoading: isLoadingExpiring } = useListItems({
     status: "expiring_soon",
     sort: "asc"
@@ -33,6 +36,22 @@ export function Dashboard() {
   const viewAllHref = (expiredItems && expiredItems.length > 0) 
     ? "/demo/items?status=expired" 
     : "/demo/items?status=expiring_soon";
+
+  // An empty room gets the first-run screen instead of a dashboard full of
+  // zeroes. Every hook above has already run, so returning early here is safe.
+  if (isRoomEmpty) {
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div>
+          <h1 className="text-3xl font-display font-bold tracking-tight">Overview</h1>
+          <p className="text-muted-foreground mt-1">
+            Keep track of your important dates and renewals.
+          </p>
+        </div>
+        <FirstRunEmpty />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
