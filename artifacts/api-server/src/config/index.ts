@@ -48,9 +48,9 @@ function positiveInt(raw: string | undefined, fallback: number): number {
 /**
  * Maximum number of items a single anonymous demo room may hold.
  * Controlled by the MAX_ITEMS_PER_OWNER environment variable.
- * @default 100
+ * @default 10
  */
-export const MAX_ITEMS_PER_OWNER = positiveInt(process.env.MAX_ITEMS_PER_OWNER, 100);
+export const MAX_ITEMS_PER_OWNER = positiveInt(process.env.MAX_ITEMS_PER_OWNER, 10);
 
 /**
  * Window length, in milliseconds, shared by every rate limiter.
@@ -65,14 +65,6 @@ export const RATE_LIMIT_WINDOW_MS = positiveInt(process.env.RATE_LIMIT_WINDOW_MS
  * @default 300
  */
 export const RATE_LIMIT_MAX_GLOBAL = positiveInt(process.env.RATE_LIMIT_MAX_GLOBAL, 300);
-
-/**
- * Max waitlist signups per IP per window. The endpoint is public and writes a
- * permanent row, so it is deliberately tight.
- * Controlled by the RATE_LIMIT_MAX_LEADS environment variable.
- * @default 5
- */
-export const RATE_LIMIT_MAX_LEADS = positiveInt(process.env.RATE_LIMIT_MAX_LEADS, 5);
 
 /**
  * Max demo-session resets per IP per window.

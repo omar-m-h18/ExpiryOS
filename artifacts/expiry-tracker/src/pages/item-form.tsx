@@ -7,6 +7,7 @@ import {
   useCreateItem,
   useUpdateItem,
   useGetItem,
+  useGetItemsSummary,
   getGetItemQueryKey,
   getGetItemsSummaryQueryKey
 } from "@workspace/api-client-react";
@@ -63,6 +64,8 @@ export function ItemForm() {
 
   const createItem = useCreateItem();
   const updateItem = useUpdateItem();
+  const { data: summary } = useGetItemsSummary();
+  const isAtLimit = isNew && (summary?.total ?? 0) >= 10;
 
   const isSaving = createItem.isPending || updateItem.isPending;
 
@@ -196,6 +199,14 @@ export function ItemForm() {
 
       <Card>
         <CardContent className="p-6">
+          {isAtLimit && (
+            <div className="mb-6 rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>
+                You have reached the demo room limit of 10 items. Delete an existing item to create a new one.
+              </span>
+            </div>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               
@@ -308,7 +319,7 @@ export function ItemForm() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
+                <Button type="submit" disabled={isSaving || isAtLimit} className="w-full sm:w-auto">
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />

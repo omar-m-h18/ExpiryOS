@@ -27,12 +27,8 @@ interface SampleItemSpec {
 const SAMPLE_SPECS: SampleItemSpec[] = [
   { title: "Netflix subscription", category: "Subscription", offsetDays: 42 },
   { title: "SSL Certificate — checkout app", category: "Subscription", offsetDays: 11 },
-  { title: "AWS Developer Account", category: "Software", offsetDays: 5 },
   { title: "Car Insurance — Policy A-2211", category: "Insurance", offsetDays: 2 },
-  { title: "Adobe Creative Cloud", category: "Subscription", offsetDays: 30 },
-  { title: "Notary Public License", category: "License", offsetDays: 23 },
   { title: "Passport", category: "Document", offsetDays: -9 },
-  { title: "Business Registration", category: "Document", offsetDays: -95 },
 ];
 
 /**

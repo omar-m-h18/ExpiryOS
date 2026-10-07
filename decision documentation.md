@@ -304,6 +304,107 @@ Two different costs are being confused. **Writing** rows consumes compute, which
 
 ---
 
+## D-013 — Tutorial not showing: two-cause root analysis
+
+**Date:** 2026-10-07
+**Status:** Accepted — CI fix implemented, deploy unblocked by manual Netlify publish
+
+### Context
+
+The `FirstRunEmpty` tutorial component was reported as invisible. Investigation found two separate causes, each sufficient to hide it on its own.
+
+### Cause 1: Wrong bundle on the live site (blocking)
+
+The live site `expiryos.netlify.app` continued to serve `index-C2cMtcLG.js` (August 2026). The new bundle `index-DRfr193c.js` — which contains `FirstRunEmpty` — was uploaded by GitHub Actions to Netlify but was never promoted to production because **Netlify "Auto publishing" is disabled**.
+
+This is intentional (owner is on the free tier and wants to keep Netlify build minutes at zero). The workflow is: GitHub Actions builds and uploads → owner manually clicks "Publish deploy" in the Netlify dashboard → live site updates. This step was missed after the last CI run.
+
+### Cause 2: Existing seeded rooms (masking, non-blocking for new visitors)
+
+`useRoomIsEmpty` reads `summary.total` from `GET /api/items/summary`. For visitors who first arrived before D-001 was deployed, their stored room already contains 8 rows. `summary.total` is 8, not 0, so `isRoomEmpty` is `false` and `FirstRunEmpty` never renders, even after the new bundle ships.
+
+This is not a bug. Those returning visitors have already seen the product. New visitors get an empty room and see the tutorial. Cleaning up pre-D-001 rooms is the job of the scheduled cleanup (D-012, not yet built).
+
+### CI fix applied
+
+`nwtgck/actions-netlify@v3` was configured with `enable-commit-comment: true` and a `github-token`. The Actions `GITHUB_TOKEN` only has `contents: read` and `metadata: read`, so the action threw three 403 errors when it tried to write commit comments, deployment records, and commit statuses. These are cosmetic features and do not affect whether the deploy reaches Netlify. They are now set to `false` and `github-token` is removed.
+
+A 10-second `sleep` was added before the bundle-comparison check so the Netlify edge CDN has time to flush before `curl` reads `index.html`.
+
+The "Confirm the live site" step will still fail if auto-publishing is off, because Netlify accepts the upload but does not swap the live domain. That step now carries a comment explaining this and directing to this decision.
+
+### Affects
+
+- `.github/workflows/ci.yml`
+- `decision documentation.md` (this entry)
+
+---
+
+## D-014 — Demo room capped at 10 items, sample roster reduced to 4 items
+
+**Date:** 2026-10-08
+**Status:** Accepted — implemented on `feat/empty-room-onboarding`
+
+### Context
+
+1. `MAX_ITEMS_PER_OWNER` previously defaulted to 100 in `config/index.ts`. On a free Neon database, anonymous ephemeral rooms holding up to 100 items risk unnecessary table bloat. A 10-item limit provides more than enough room for prospective users to evaluate the tool.
+2. The sample roster generated 8 items. If the cap is 10 items, clicking "Show me examples" would immediately consume 80% of the room's quota, leaving the visitor room to add only 2 custom items before being blocked.
+
+### Decision
+
+1. **Backend cap**: Set `MAX_ITEMS_PER_OWNER` default from 100 to 10.
+2. **Sample roster**: Trim `SAMPLE_SPECS` to 4 items (Netflix active, SSL certificate expiring soon, Car Insurance expiring this week, Passport expired). All dashboard status cards and spotlight categories remain covered, while leaving 6 slots open for user experimentation.
+3. **Proactive UI feedback**:
+   - `components/demo-banner.tsx` displays the current count and cap (`X / 10 items`) on every demo page.
+   - When the 10-item cap is reached, `demo-banner` switches to a destructive alert style informing the visitor.
+   - `pages/item-form.tsx` disables the submit button and displays a warning banner when creating a new item at limit.
+
+### Affects
+
+- `artifacts/api-server/src/config/index.ts`
+- `artifacts/api-server/src/seed/sample-items.ts`
+- `artifacts/expiry-tracker/src/components/demo-banner.tsx`
+- `artifacts/expiry-tracker/src/components/first-run/first-run-empty.tsx`
+- `artifacts/expiry-tracker/src/pages/item-form.tsx`
+- `decision documentation.md` (this entry)
+
+---
+
+## D-015 — Customer email collection delegated to Tally.so popup modal
+
+**Date:** 2026-10-08
+**Status:** Accepted — implemented on `feat/empty-room-onboarding`
+
+### Context
+
+The demo application previously contained an inline form posting email strings to `POST /api/leads`. This added unnecessary maintenance overhead (Neon DB storage, rate limiting, and zero anti-spam or qualification questions).
+
+### Decision
+
+Delegate customer lead collection to Tally.so (`https://tally.so/r/lbPjoV`, form ID `lbPjoV`):
+
+1. **Popup widget:** Include Tally's `embed.js` script in `index.html`.
+2. **Helper with fallback:** `src/lib/tally.ts` triggers `window.Tally.openPopup("lbPjoV", ...)` with modal width 540 and wave emoji, falling back to a direct tab redirect if the widget is blocked.
+3. **Placements:**
+   - Landing page: Replaces the custom email form with a clean "Join Early Access List" card.
+   - App sidebar: Provides a subtle "Early Access List" trigger so users exploring the demo can sign up without returning to the landing page.
+4. **Backend cleanup:** Completely remove `POST /api/leads`, `leads.repository.ts`, `RATE_LIMIT_MAX_LEADS`, and `demo.ts` helper so zero waitlist requests ever write to the Neon database.
+
+### Affects
+
+- `artifacts/api-server/src/routes/index.ts`
+- `artifacts/api-server/src/routes/leads.ts` (deleted)
+- `artifacts/api-server/src/repositories/leads.repository.ts` (deleted)
+- `artifacts/api-server/src/config/index.ts`
+- `artifacts/expiry-tracker/src/lib/demo.ts` (deleted)
+- `artifacts/expiry-tracker/index.html`
+- `artifacts/expiry-tracker/src/lib/tally.ts`
+- `artifacts/expiry-tracker/src/pages/landing.tsx`
+- `artifacts/expiry-tracker/src/components/layout.tsx`
+- `decision documentation.md` (this entry)
+
+---
+
 ## Rejected and superseded
 
 - **`SEED_SAMPLE_DATA` feature flag.** Superseded by D-002. Rejected because a flag is a way to forget, and the failure mode is silent data loss for the person who clicks the button.

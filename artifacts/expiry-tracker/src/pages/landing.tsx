@@ -1,54 +1,9 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Link } from "wouter";
-import { Loader2, ArrowRight, Mail, Sparkles } from "lucide-react";
+import { ArrowRight, Mail, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { insertLead } from "@/lib/demo";
-
-const waitlistSchema = z.object({
-  email: z.string().trim().email("Please enter a valid email address"),
-});
-
-type WaitlistValues = z.infer<typeof waitlistSchema>;
+import { TALLY_FORM_ID, openTallyWaitlist } from "@/lib/tally";
 
 export function Landing() {
-  const { toast } = useToast();
-  const [submitting, setSubmitting] = useState(false);
-
-  const form = useForm<WaitlistValues>({
-    resolver: zodResolver(waitlistSchema),
-    defaultValues: { email: "" },
-  });
-
-  const onSubmit = async (values: WaitlistValues) => {
-    setSubmitting(true);
-    try {
-      await insertLead(values.email);
-      toast({ title: "You're on the list!", description: "We'll be in touch soon." });
-      form.reset();
-    } catch (err) {
-      toast({
-        title: "Couldn't add your email",
-        description: err instanceof Error ? err.message : "Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
@@ -95,51 +50,31 @@ export function Landing() {
             </Link>
           </div>
 
-          {/* Waitlist */}
-          <div className="mx-auto max-w-md space-y-3 pt-2">
-            <p className="text-sm text-muted-foreground">
-              Like what you see? Join the early-bird list.
+          {/* Tally Early Access / Waitlist */}
+          <div className="mx-auto max-w-md space-y-3 pt-4 border-t border-border/60">
+            <p className="text-sm font-medium text-foreground">
+              Interested in self-hosting or cloud accounts?
             </p>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="flex flex-col sm:flex-row gap-2"
+            <p className="text-xs text-muted-foreground">
+              Join the early-access list to get notified when new versions launch.
+            </p>
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="gap-2 h-12 px-6 font-medium shadow-sm hover:bg-muted"
+                data-tally-open={TALLY_FORM_ID}
+                data-tally-layout="modal"
+                data-tally-width="540"
+                data-tally-emoji-text="👋"
+                data-tally-emoji-animation="wave"
+                onClick={openTallyWaitlist}
               >
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem className="flex-1 text-left">
-                      <FormLabel className="sr-only">Email address</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="you@example.com"
-                          autoComplete="email"
-                          className="h-12"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  variant="outline"
-                  size="lg"
-                  className="h-12 gap-2"
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <Mail className="w-4 h-4" aria-hidden="true" />
-                  )}
-                  {submitting ? "Joining..." : "Join the list"}
-                </Button>
-              </form>
-            </Form>
+                <Mail className="w-4 h-4 text-primary" aria-hidden="true" />
+                <span>Join Early Access List</span>
+              </Button>
+            </div>
           </div>
         </div>
       </main>
