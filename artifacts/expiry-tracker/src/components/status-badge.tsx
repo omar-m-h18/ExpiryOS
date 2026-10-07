@@ -17,7 +17,7 @@ export function StatusBadge({ status, daysRemaining }: { status: Status; daysRem
   switch (status) {
     case "expired":
       return (
-        <Badge variant="destructive" className="gap-1 px-2 py-0.5">
+        <Badge variant="destructive" className="gap-1.5 px-2.5 py-0.5 font-medium text-xs tracking-tight shrink-0">
           <AlertCircle className="w-3 h-3" />
           {daysRemaining !== undefined && daysRemaining !== null && daysRemaining < 0
             ? `${Math.abs(daysRemaining)} days overdue`
@@ -26,7 +26,7 @@ export function StatusBadge({ status, daysRemaining }: { status: Status; daysRem
       );
     case "expiring_soon":
       return (
-        <Badge variant="warning" className="gap-1 px-2 py-0.5">
+        <Badge variant="warning" className="gap-1.5 px-2.5 py-0.5 font-medium text-xs tracking-tight shrink-0">
           <Clock className="w-3 h-3" />
           {daysRemaining !== undefined && daysRemaining !== null
             ? `${daysRemaining} days left`
@@ -35,7 +35,7 @@ export function StatusBadge({ status, daysRemaining }: { status: Status; daysRem
       );
     case "active":
       return (
-        <Badge variant="active" className="gap-1 px-2 py-0.5 bg-success/10 text-success">
+        <Badge variant="active" className="gap-1.5 px-2.5 py-0.5 font-medium text-xs tracking-tight shrink-0 bg-success/10 text-success border border-success/20">
           <CheckCircle2 className="w-3 h-3" />
           {typeof daysRemaining === "number" &&
           Number.isFinite(daysRemaining) &&

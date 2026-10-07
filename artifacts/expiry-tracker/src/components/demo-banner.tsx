@@ -14,27 +14,27 @@ export function DemoBanner() {
 
   return (
     <div
-      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-md border px-4 py-3 mb-6 transition-colors ${
+      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-lg border px-3.5 py-2.5 sm:px-4 mb-6 transition-colors ${
         isAtLimit
           ? "border-destructive/40 bg-destructive/5 text-destructive"
-          : "border-border bg-muted/40"
+          : "border-border/80 bg-muted/30"
       }`}
     >
-      <p className="text-sm text-muted-foreground flex items-center gap-2">
+      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
         {isAtLimit ? (
           <AlertCircle className="w-4 h-4 text-destructive shrink-0" aria-hidden="true" />
         ) : (
           <Info className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
         )}
         <span>
-          <span className="font-medium text-foreground">Demo session</span>
+          <span className="font-semibold text-foreground">Demo session</span>
           {isAtLimit ? (
             <span className="text-destructive font-medium">
-              {" — demo limit reached (10/10 items). Delete an item or start fresh to add more."}
+              {" — limit reached (10/10 items). Delete an item to add more."}
             </span>
           ) : (
             <span>
-              {" — private, temporary room (up to 10 items). Resets when you close this browser."}
+              {" — private sandbox (up to 10 items). Resets when you close your browser."}
             </span>
           )}
         </span>
@@ -42,10 +42,10 @@ export function DemoBanner() {
 
       {summary !== undefined && (
         <span
-          className={`text-xs font-semibold px-2.5 py-1 rounded shrink-0 self-start sm:self-auto ${
+          className={`text-[11px] sm:text-xs font-semibold px-2.5 py-0.5 rounded-full shrink-0 self-start sm:self-auto border ${
             isAtLimit
-              ? "bg-destructive text-destructive-foreground"
-              : "bg-secondary text-secondary-foreground"
+              ? "bg-destructive text-destructive-foreground border-destructive"
+              : "bg-secondary text-secondary-foreground border-border/50"
           }`}
         >
           {count} / {DEMO_ITEM_LIMIT} items

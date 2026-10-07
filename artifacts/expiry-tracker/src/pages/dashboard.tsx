@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useGetItemsSummary, useListItems } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, ArrowRight, CheckCircle2, Clock, ShieldAlert, List } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle2, Clock, List } from "lucide-react";
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
@@ -43,8 +43,8 @@ export function Dashboard() {
     return (
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div>
-          <h1 className="text-3xl font-display font-bold tracking-tight">Overview</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground">Overview</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             Keep track of your important dates and renewals.
           </p>
         </div>
@@ -56,8 +56,8 @@ export function Dashboard() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <h1 className="text-3xl font-display font-bold tracking-tight">Overview</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground">Overview</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">
           Keep track of your important dates and renewals.
         </p>
       </div>
@@ -65,12 +65,13 @@ export function Dashboard() {
       {isLoadingSummary ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24" />
+            <Card key={i} className="border-l-4 border-l-border/40">
+              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-4 w-4 rounded" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-14 rounded-md" />
               </CardContent>
             </Card>
           ))}
@@ -80,11 +81,11 @@ export function Dashboard() {
           <Link href="/demo/items" className="group outline-none">
             <Card className="hover-elevate cursor-pointer border-l-4 border-l-border transition-all bg-card">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Total Items</CardTitle>
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">Total Items</CardTitle>
                 <List className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{summary.total}</div>
+                <div className="text-3xl font-bold font-display tracking-tight">{summary.total}</div>
               </CardContent>
             </Card>
           </Link>
@@ -92,11 +93,11 @@ export function Dashboard() {
           <Link href="/demo/items?status=active" className="group outline-none">
             <Card className="hover-elevate cursor-pointer border-l-4 border-l-success transition-all">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Active</CardTitle>
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">Active</CardTitle>
                 <CheckCircle2 className="w-4 h-4 text-success" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{summary.active}</div>
+                <div className="text-3xl font-bold font-display tracking-tight">{summary.active}</div>
               </CardContent>
             </Card>
           </Link>
@@ -104,11 +105,11 @@ export function Dashboard() {
           <Link href="/demo/items?status=expiring_soon" className="group outline-none">
             <Card className="hover-elevate cursor-pointer border-l-4 border-l-warning transition-all bg-warning/5">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Expiring Soon</CardTitle>
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">Expiring Soon</CardTitle>
                 <Clock className="w-4 h-4 text-warning" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-warning">{summary.expiring_soon}</div>
+                <div className="text-3xl font-bold font-display tracking-tight text-warning">{summary.expiring_soon}</div>
               </CardContent>
             </Card>
           </Link>
@@ -116,11 +117,11 @@ export function Dashboard() {
           <Link href="/demo/items?status=expired" className="group outline-none">
             <Card className="hover-elevate cursor-pointer border-l-4 border-l-destructive transition-all bg-destructive/5">
               <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Expired</CardTitle>
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">Expired</CardTitle>
                 <AlertCircle className="w-4 h-4 text-destructive" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-destructive">{summary.expired}</div>
+                <div className="text-3xl font-bold font-display tracking-tight text-destructive">{summary.expired}</div>
               </CardContent>
             </Card>
           </Link>
@@ -130,28 +131,34 @@ export function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-display font-semibold">Needs Attention</h2>
-            <Link href={viewAllHref} className="text-sm text-primary hover:underline flex items-center gap-1 font-medium">
-              View all <ArrowRight className="w-4 h-4" />
+            <h2 className="text-lg sm:text-xl font-display font-semibold tracking-tight">Needs Attention</h2>
+            <Link href={viewAllHref} className="text-xs sm:text-sm text-primary hover:underline flex items-center gap-1 font-medium group">
+              View all <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
           
           <Card>
             <div className="divide-y border-t-0">
               {isLoadingItems ? (
-                <div className="p-6 space-y-4">
-                  <Skeleton className="h-6 w-full" />
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-6 w-5/6" />
+                <div className="divide-y divide-border/50">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="p-4 flex items-center justify-between gap-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-36 sm:w-48" />
+                        <Skeleton className="h-3 w-24 sm:w-32" />
+                      </div>
+                      <Skeleton className="h-6 w-24 rounded-full shrink-0" />
+                    </div>
+                  ))}
                 </div>
               ) : needsAttentionItems.length > 0 ? (
                 needsAttentionItems.map(item => (
                   <Link key={item.id} href={`/demo/items/${item.id}/edit`} className="block hover:bg-muted/50 transition-colors p-4 group outline-none">
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium group-hover:text-primary transition-colors">{item.title}</span>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <span className="font-medium text-sm sm:text-base group-hover:text-primary transition-colors truncate">{item.title}</span>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {item.category && <span>{item.category}</span>}
+                          {item.category && <span className="truncate">{item.category}</span>}
                           {item.category && <span>•</span>}
                           <span>Expires: {formatDate(item.expiration_date)}</span>
                         </div>
@@ -161,10 +168,14 @@ export function Dashboard() {
                   </Link>
                 ))
               ) : (
-                <div className="p-8 text-center flex flex-col items-center justify-center text-muted-foreground">
-                  <ShieldAlert className="w-12 h-12 text-muted mb-3" />
-                  <p>Nothing needs attention right now.</p>
-                  <p className="text-sm mt-1">You're all caught up!</p>
+                <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mb-3">
+                    <CheckCircle2 className="w-6 h-6 text-success" />
+                  </div>
+                  <p className="font-semibold text-foreground text-sm sm:text-base">All clear</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs">
+                    No items are expired or expiring soon. Everything is up to date!
+                  </p>
                 </div>
               )}
             </div>
@@ -172,33 +183,36 @@ export function Dashboard() {
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-xl font-display font-semibold">Spotlight</h2>
+          <h2 className="text-lg sm:text-xl font-display font-semibold tracking-tight">Spotlight</h2>
           <Card className="bg-primary text-primary-foreground border-primary-border relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-primary-foreground">
-                <Clock className="w-5 h-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-primary-foreground text-base sm:text-lg">
+                <Clock className="w-4 h-4 text-primary-foreground/90" />
                 Expiring This Week
               </CardTitle>
-              <CardDescription className="text-primary-foreground/80">
+              <CardDescription className="text-xs text-primary-foreground/75 mt-0.5">
                 Items requiring action in the next 7 days
               </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingSummary ? (
-                <Skeleton className="h-12 w-16 bg-white/20" />
+                <div className="space-y-3">
+                  <Skeleton className="h-12 w-20 bg-white/15 rounded-lg" />
+                  <Skeleton className="h-4 w-44 bg-white/10 rounded" />
+                </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  <div className="text-5xl font-bold font-display">
+                  <div className="text-5xl font-bold font-display tracking-tight">
                     {summary?.expiring_this_week ?? 0}
                   </div>
                   {(summary?.expiring_this_week ?? 0) > 0 ? (
-                    <p className="text-sm text-primary-foreground/90">
-                      Don't let these slip by. Check the items list for details.
+                    <p className="text-xs sm:text-sm text-primary-foreground/90 leading-relaxed">
+                      Items need renewal shortly. Check the list to take action before they lapse.
                     </p>
                   ) : (
-                    <p className="text-sm text-primary-foreground/90">
-                      Clear schedule for the week. Relax!
+                    <p className="text-xs sm:text-sm text-primary-foreground/90 leading-relaxed">
+                      No renewals due this week. Everything is on schedule.
                     </p>
                   )}
                   <SpotlightAction items={expiringSoonItems} count={summary?.expiring_this_week ?? 0} />

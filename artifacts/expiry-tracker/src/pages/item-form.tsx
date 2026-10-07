@@ -133,25 +133,27 @@ export function ItemForm() {
 
   if (!isNew && isItemError) {
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
         <Button
           variant="ghost"
           onClick={() => setLocation("/demo/items")}
-          className="pl-0 text-muted-foreground hover:text-foreground"
+          className="pl-0 text-muted-foreground hover:text-foreground text-sm font-medium"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Items
         </Button>
 
-        <Card>
+        <Card className="border border-border/80">
           <CardContent className="p-10 flex flex-col items-center text-center gap-3">
-            <AlertCircle className="w-10 h-10 text-destructive" />
-            <h1 className="text-2xl font-display font-semibold">Item not found</h1>
-            <p className="text-muted-foreground max-w-sm">
+            <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-1">
+              <AlertCircle className="w-6 h-6 text-destructive" />
+            </div>
+            <h1 className="text-xl sm:text-2xl font-display font-semibold text-foreground">Item not found</h1>
+            <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
               This item may have been deleted, or it belongs to a different demo
               session. Head back to your items to pick another.
             </p>
-            <Button onClick={() => setLocation("/demo/items")} className="mt-2">
+            <Button onClick={() => setLocation("/demo/items")} size="sm" className="mt-3">
               Back to Items
             </Button>
           </CardContent>
@@ -162,14 +164,38 @@ export function ItemForm() {
 
   if (!isNew && isLoadingItem) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-32" />
+      <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-8 w-28 rounded-md" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-44 rounded-md" />
+          <Skeleton className="h-4 w-72 rounded-md" />
+        </div>
         <Card>
-          <CardContent className="p-6 space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-32 w-full" />
+          <CardContent className="p-6 space-y-6">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-10 w-full rounded-md" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full rounded-md" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-28 w-full rounded-md" />
+            </div>
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Skeleton className="h-10 w-20 rounded-md" />
+              <Skeleton className="h-10 w-28 rounded-md" />
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -181,17 +207,17 @@ export function ItemForm() {
       <Button 
         variant="ghost" 
         onClick={() => setLocation("/demo/items")}
-        className="pl-0 text-muted-foreground hover:text-foreground"
+        className="pl-0 text-muted-foreground hover:text-foreground text-sm font-medium"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Items
       </Button>
 
       <div>
-        <h1 className="text-3xl font-display font-bold tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-foreground">
           {isNew ? "Add New Item" : "Edit Item"}
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">
           {isNew 
             ? "Track a new expiration date for an item, subscription, or document." 
             : "Update details for this tracked item."}
@@ -244,15 +270,15 @@ export function ItemForm() {
                               <Button
                                 variant="outline"
                                 className={cn(
-                                  "w-full justify-start text-left font-normal",
+                                  "w-full justify-start text-left font-normal h-10",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                                 {selectedDate && !isNaN(selectedDate.getTime()) ? (
-                                  format(selectedDate, "dd/MM/yyyy")
+                                  <span className="text-foreground font-medium">{format(selectedDate, "dd/MM/yyyy")}</span>
                                 ) : (
-                                  <span>dd/mm/yyyy</span>
+                                  <span>Select expiration date...</span>
                                 )}
                               </Button>
                             </FormControl>
@@ -311,7 +337,7 @@ export function ItemForm() {
                 )}
               />
 
-              <div className="flex flex-col sm:flex-row justify-end pt-4 border-t gap-2">
+              <div className="flex flex-col-reverse sm:flex-row justify-end pt-4 border-t gap-2.5">
                 <Button 
                   type="button" 
                   variant="ghost" 
@@ -320,7 +346,7 @@ export function ItemForm() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitDisabled} className="w-full sm:w-auto">
+                <Button type="submit" disabled={isSubmitDisabled} className="w-full sm:w-auto font-medium shadow-2xs">
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />

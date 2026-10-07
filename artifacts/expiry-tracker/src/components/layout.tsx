@@ -18,8 +18,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar (Desktop) */}
       <nav className="hidden md:flex border-r border-border bg-sidebar shrink-0 w-64 flex-col justify-between">
         <div className="p-6">
-          <Link href="/demo" className="flex items-center gap-2 mb-8 no-underline group outline-none">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold shadow-sm">
+          <Link href="/demo" className="flex items-center gap-2.5 mb-8 no-underline group outline-none">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-display font-bold shadow-sm">
               E
             </div>
             <span className="font-display font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
@@ -35,14 +35,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md transition-colors outline-none",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors outline-none",
                     isActive
-                      ? "bg-secondary text-secondary-foreground font-medium"
+                      ? "bg-secondary text-secondary-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
+                  <item.icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -58,15 +58,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             data-tally-emoji-text="👋"
             data-tally-emoji-animation="wave"
             onClick={openTallyWaitlist}
-            className="flex items-center gap-2 justify-center w-full px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md border border-border/80 hover:bg-muted/50 cursor-pointer"
+            className="flex items-center gap-2 justify-center w-full h-9 px-3 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg border border-border/80 hover:bg-muted/50 cursor-pointer shadow-2xs"
           >
             <Sparkles className="w-3.5 h-3.5 text-primary" />
             <span>Early Access List</span>
           </button>
-          <ThemeToggle showLabel className="w-full" />
+          <ThemeToggle showLabel className="w-full rounded-lg" />
           <Link
             href="/demo/items/new"
-            className="flex items-center gap-2 justify-center w-full px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium shadow-sm hover:opacity-90 transition-opacity outline-none"
+            className="flex items-center gap-2 justify-center w-full h-10 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium shadow-2xs hover:opacity-90 transition-opacity outline-none"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Add Item</span>
@@ -76,7 +76,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 min-w-0 overflow-y-auto pb-20 md:pb-0">
-        <div className="max-w-5xl mx-auto p-6 md:p-10">
+        <div className="max-w-5xl mx-auto p-5 sm:p-6 md:p-8 lg:p-10">
           <DemoBanner />
           {children}
         </div>
