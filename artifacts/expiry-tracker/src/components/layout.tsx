@@ -11,6 +11,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/demo", label: "Dashboard", icon: LayoutDashboard },
     { href: "/demo/items", label: "All Items", icon: List },
+    { href: "/demo/items/new", label: "Add Item", icon: PlusCircle },
   ];
 
   return (
@@ -29,7 +30,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
           <div className="space-y-1">
             {navItems.map((item) => {
-              const isActive = location === item.href || (item.href !== "/demo" && location.startsWith(item.href));
+              const isActive =
+                item.href === "/demo"
+                  ? location === "/demo"
+                  : item.href === "/demo/items"
+                  ? location === "/demo/items"
+                  : location === item.href;
               return (
                 <Link
                   key={item.href}
@@ -49,28 +55,31 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <div className="p-6 space-y-2">
-          <button
-            type="button"
-            data-tally-open={TALLY_FORM_ID}
-            data-tally-layout="modal"
-            data-tally-width="540"
-            data-tally-emoji-text="👋"
-            data-tally-emoji-animation="wave"
-            onClick={openTallyWaitlist}
-            className="flex items-center gap-2 justify-center w-full h-9 px-3 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg border border-border/80 hover:bg-muted/50 cursor-pointer shadow-2xs"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            <span>Early Access List</span>
-          </button>
+        {/* Sidebar Footer with Elevated Early Access Card and Theme Toggle */}
+        <div className="p-4 space-y-3">
+          <div className="p-3.5 rounded-xl bg-primary/5 border border-primary/20 space-y-2">
+            <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+              <Sparkles className="w-4 h-4 text-primary shrink-0" />
+              <span>Automated Alerts</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              Get email & WhatsApp reminders before renewals expire when cloud sync launches.
+            </p>
+            <button
+              type="button"
+              data-tally-open={TALLY_FORM_ID}
+              data-tally-layout="modal"
+              data-tally-width="540"
+              data-tally-emoji-text="👋"
+              data-tally-emoji-animation="wave"
+              onClick={openTallyWaitlist}
+              className="w-full h-8 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span>Join Waitlist</span>
+            </button>
+          </div>
+
           <ThemeToggle showLabel className="w-full rounded-lg" />
-          <Link
-            href="/demo/items/new"
-            className="flex items-center gap-2 justify-center w-full h-10 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium shadow-2xs hover:opacity-90 transition-opacity outline-none"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Add Item</span>
-          </Link>
         </div>
       </nav>
 
@@ -85,13 +94,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Bottom Tab Bar (Mobile) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-border flex items-center justify-around z-50 px-2 pb-[env(safe-area-inset-bottom)] h-16">
         {navItems.map((item) => {
-          const isActive = location === item.href || (item.href !== "/demo" && location.startsWith(item.href));
+          const isActive =
+            item.href === "/demo"
+              ? location === "/demo"
+              : item.href === "/demo/items"
+              ? location === "/demo/items"
+              : location === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 min-w-[64px] h-full outline-none",
+                "flex flex-col items-center justify-center gap-1 min-w-[56px] h-full outline-none",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -100,17 +114,20 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </Link>
           );
         })}
-        <Link
-          href="/demo/items/new"
-          className={cn(
-            "flex flex-col items-center justify-center gap-1 min-w-[64px] h-full outline-none",
-            location === "/demo/items/new" ? "text-primary" : "text-muted-foreground hover:text-foreground"
-          )}
+        <button
+          type="button"
+          data-tally-open={TALLY_FORM_ID}
+          data-tally-layout="modal"
+          data-tally-width="540"
+          data-tally-emoji-text="👋"
+          data-tally-emoji-animation="wave"
+          onClick={openTallyWaitlist}
+          className="flex flex-col items-center justify-center gap-1 min-w-[56px] h-full text-muted-foreground hover:text-primary transition-colors cursor-pointer"
         >
-          <PlusCircle className="w-5 h-5" />
-          <span className="text-[10px] font-medium">Add Item</span>
-        </Link>
-        <div className="flex flex-col items-center justify-center gap-1 min-w-[64px] h-full">
+          <Sparkles className="w-5 h-5 text-primary" />
+          <span className="text-[10px] font-medium">Waitlist</span>
+        </button>
+        <div className="flex flex-col items-center justify-center gap-1 min-w-[56px] h-full">
           <ThemeToggle />
           <span className="text-[10px] font-medium text-muted-foreground">Theme</span>
         </div>

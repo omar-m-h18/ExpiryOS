@@ -53,6 +53,15 @@ const itemSchema = z.object({
 
 type ItemFormValues = z.infer<typeof itemSchema>;
 
+const SUGGESTED_CATEGORIES = [
+  "Documents",
+  "Subscriptions",
+  "Insurance",
+  "Software",
+  "Warranties",
+  "Health",
+] as const;
+
 export function ItemForm() {
   const [, setLocation] = useLocation();
   const params = useParams();
@@ -333,6 +342,24 @@ export function ItemForm() {
                       <FormControl>
                         <Input placeholder="e.g. Documents, Software, Health..." {...field} />
                       </FormControl>
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <span className="text-[11px] text-muted-foreground mr-0.5">Quick picks:</span>
+                        {SUGGESTED_CATEGORIES.map((cat) => (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => field.onChange(cat)}
+                            className={cn(
+                              "text-[11px] px-2.5 py-0.5 rounded-full border transition-all cursor-pointer font-medium",
+                              field.value === cat
+                                ? "bg-primary text-primary-foreground border-primary shadow-2xs"
+                                : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground border-border/70"
+                            )}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

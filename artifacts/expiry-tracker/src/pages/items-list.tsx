@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   useListItems,
@@ -15,7 +16,8 @@ import { formatDate, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useItemFilters } from "@/hooks/use-item-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import { Search, Trash2, ArrowUp, ArrowDown, AlertCircle } from "lucide-react";
+import { Search, Trash2, ArrowUp, ArrowDown, AlertCircle, Sparkles, X } from "lucide-react";
+import { TALLY_FORM_ID, openTallyWaitlist } from "@/lib/tally";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +54,18 @@ export function ItemsList() {
   // current filter happens to match nothing.
   const { isEmpty: isRoomEmpty } = useRoomIsEmpty();
   const hasActiveFilters = Boolean(search) || status !== "all";
+
+  const [showEarlyAccessCallout, setShowEarlyAccessCallout] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return sessionStorage.getItem("expiryos_hide_early_access_callout") !== "true";
+  });
+
+  const handleDismissCallout = () => {
+    setShowEarlyAccessCallout(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("expiryos_hide_early_access_callout", "true");
+    }
+  };
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -148,71 +162,114 @@ export function ItemsList() {
             </Card>
           ))
         ) : items && items.length > 0 ? (
-          items.map((item) => (
-            <Card
-              key={item.id}
-              className="hover-elevate transition-all overflow-hidden flex items-stretch"
-            >
-              <div className={`w-1.5 shrink-0 ${
-                item.status === 'expired' ? 'bg-destructive' :
-                item.status === 'expiring_soon' ? 'bg-warning' :
-                'bg-success'
-              }`} />
-              <div className="p-4 flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
-                {/* Only the title + expiry info are the clickable link to edit.
-                    Keep interactive controls (delete) OUTSIDE any <a> so their
-                    clicks can never navigate away or be swallowed by the link. */}
-                <Link href={`/demo/items/${item.id}/edit`} className="flex flex-col gap-1 outline-none group min-w-0">
-                  <h3 className="font-semibold text-base sm:text-lg text-foreground group-hover:text-primary transition-colors tracking-tight truncate">
-                    {item.title}
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm text-muted-foreground">
-                    {item.category && (
-                      <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground border border-border/50">
-                        {item.category}
-                      </span>
-                    )}
-                    <span>Expires: <span className="font-medium text-foreground">{formatDate(item.expiration_date)}</span></span>
-                  </div>
-                </Link>
+          <>
+            {items.map((item) => (
+              <Card
+                key={item.id}
+                className="hover-elevate transition-all overflow-hidden flex items-stretch"
+              >
+                <div className={`w-1.5 shrink-0 ${
+                  item.status === 'expired' ? 'bg-destructive' :
+                  item.status === 'expiring_soon' ? 'bg-warning' :
+                  'bg-success'
+                }`} />
+                <div className="p-4 flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
+                  {/* Only the title + expiry info are the clickable link to edit.
+                      Keep interactive controls (delete) OUTSIDE any <a> so their
+                      clicks can never navigate away or be swallowed by the link. */}
+                  <Link href={`/demo/items/${item.id}/edit`} className="flex flex-col gap-1 outline-none group min-w-0">
+                    <h3 className="font-semibold text-base sm:text-lg text-foreground group-hover:text-primary transition-colors tracking-tight truncate">
+                      {item.title}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm text-muted-foreground">
+                      {item.category && (
+                        <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground border border-border/50">
+                          {item.category}
+                        </span>
+                      )}
+                      <span>Expires: <span className="font-medium text-foreground">{formatDate(item.expiration_date)}</span></span>
+                    </div>
+                  </Link>
 
-                {/* Status + Delete — unrelated to navigation, sits outside the <a>. */}
-                <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-                  <StatusBadge status={item.status} daysRemaining={item.days_remaining} />
+                  {/* Status + Delete — unrelated to navigation, sits outside the <a>. */}
+                  <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
+                    <StatusBadge status={item.status} daysRemaining={item.days_remaining} />
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 z-10 h-8 w-8"
-                        aria-label={`Delete ${item.title}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete the item "{item.title}".
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={(e) => handleDelete(item.id, e)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 z-10 h-8 w-8"
+                          aria-label={`Delete ${item.title}`}
                         >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete the item "{item.title}".
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={(e) => handleDelete(item.id, e)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </Card>
+            ))}
+
+            {showEarlyAccessCallout && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-2 animate-in fade-in duration-300">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 mt-0.5">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground">
+                      Want automated renewal reminders sent directly to your inbox or phone?
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                      In the upcoming cloud release, ExpiryOS delivers alerts before renewals expire. Join early access to get early invites.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                  <Button
+                    size="sm"
+                    className="h-8 px-3.5 text-xs font-semibold shadow-2xs"
+                    data-tally-open={TALLY_FORM_ID}
+                    data-tally-layout="modal"
+                    data-tally-width="540"
+                    data-tally-emoji-text="👋"
+                    data-tally-emoji-animation="wave"
+                    onClick={openTallyWaitlist}
+                  >
+                    Join Waitlist
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={handleDismissCallout}
+                    aria-label="Dismiss callout"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
-            </Card>
-          ))
+            )}
+          </>
         ) : isError ? (
           <Card className="p-10 sm:p-12 flex flex-col items-center justify-center text-center">
             <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-3">
