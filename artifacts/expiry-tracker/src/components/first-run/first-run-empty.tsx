@@ -108,7 +108,7 @@ export function FirstRunEmpty() {
               {resetSession.isPending ? "Adding examples..." : "Show me examples"}
             </Button>
             <p className="text-xs text-muted-foreground mt-2">
-              Adds eight example items to a fresh room. You can clear them at any
+              Adds four example items to a fresh room. You can clear them at any
               time.
             </p>
           </div>

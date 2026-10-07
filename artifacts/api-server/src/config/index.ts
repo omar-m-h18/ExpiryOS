@@ -48,9 +48,9 @@ function positiveInt(raw: string | undefined, fallback: number): number {
 /**
  * Maximum number of items a single anonymous demo room may hold.
  * Controlled by the MAX_ITEMS_PER_OWNER environment variable.
- * @default 100
+ * @default 10
  */
-export const MAX_ITEMS_PER_OWNER = positiveInt(process.env.MAX_ITEMS_PER_OWNER, 100);
+export const MAX_ITEMS_PER_OWNER = positiveInt(process.env.MAX_ITEMS_PER_OWNER, 10);
 
 /**
  * Window length, in milliseconds, shared by every rate limiter.

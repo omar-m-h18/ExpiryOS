@@ -340,6 +340,36 @@ The "Confirm the live site" step will still fail if auto-publishing is off, beca
 
 ---
 
+## D-014 — Demo room capped at 10 items, sample roster reduced to 4 items
+
+**Date:** 2026-10-08
+**Status:** Accepted — implemented on `feat/empty-room-onboarding`
+
+### Context
+
+1. `MAX_ITEMS_PER_OWNER` previously defaulted to 100 in `config/index.ts`. On a free Neon database, anonymous ephemeral rooms holding up to 100 items risk unnecessary table bloat. A 10-item limit provides more than enough room for prospective users to evaluate the tool.
+2. The sample roster generated 8 items. If the cap is 10 items, clicking "Show me examples" would immediately consume 80% of the room's quota, leaving the visitor room to add only 2 custom items before being blocked.
+
+### Decision
+
+1. **Backend cap**: Set `MAX_ITEMS_PER_OWNER` default from 100 to 10.
+2. **Sample roster**: Trim `SAMPLE_SPECS` to 4 items (Netflix active, SSL certificate expiring soon, Car Insurance expiring this week, Passport expired). All dashboard status cards and spotlight categories remain covered, while leaving 6 slots open for user experimentation.
+3. **Proactive UI feedback**:
+   - `components/demo-banner.tsx` displays the current count and cap (`X / 10 items`) on every demo page.
+   - When the 10-item cap is reached, `demo-banner` switches to a destructive alert style informing the visitor.
+   - `pages/item-form.tsx` disables the submit button and displays a warning banner when creating a new item at limit.
+
+### Affects
+
+- `artifacts/api-server/src/config/index.ts`
+- `artifacts/api-server/src/seed/sample-items.ts`
+- `artifacts/expiry-tracker/src/components/demo-banner.tsx`
+- `artifacts/expiry-tracker/src/components/first-run/first-run-empty.tsx`
+- `artifacts/expiry-tracker/src/pages/item-form.tsx`
+- `decision documentation.md` (this entry)
+
+---
+
 ## Rejected and superseded
 
 - **`SEED_SAMPLE_DATA` feature flag.** Superseded by D-002. Rejected because a flag is a way to forget, and the failure mode is silent data loss for the person who clicks the button.
