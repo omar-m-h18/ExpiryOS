@@ -44,16 +44,14 @@ export interface StatusResult {
  * @returns Status classification and integer days until/since expiry
  */
 export function computeStatus(expirationDate: string): StatusResult {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
 
-  // Append T00:00:00 to force local-timezone interpretation; without it,
-  // `new Date("2026-07-21")` is parsed as UTC midnight which can produce
-  // an off-by-one error depending on the server's timezone offset.
-  const expiry = new Date(`${expirationDate}T00:00:00`);
+  const [year, month, day] = expirationDate.split("-").map(Number);
+  const expiryUTC = Date.UTC(year, month - 1, day);
 
-  const diffMs = expiry.getTime() - today.getTime();
-  const days_remaining = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  // Exact calendar day delta: immune to DST 23h/25h shifts and local hour offsets
+  const days_remaining = Math.round((expiryUTC - todayUTC) / 86_400_000);
 
   let status: ItemStatus;
   if (days_remaining < 0) {

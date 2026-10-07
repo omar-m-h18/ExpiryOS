@@ -143,7 +143,7 @@ class DrizzleItemsRepository implements IItemsRepository {
       .select()
       .from(itemsTable)
       .where(and(...conditions))
-      .orderBy(sortDir(itemsTable.expirationDate));
+      .orderBy(sortDir(itemsTable.expirationDate), asc(itemsTable.id));
 
     const rows = await query;
     let enriched = rows.map(enrichItem);

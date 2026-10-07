@@ -64,10 +64,11 @@ export function ItemForm() {
 
   const createItem = useCreateItem();
   const updateItem = useUpdateItem();
-  const { data: summary } = useGetItemsSummary();
+  const { data: summary, isLoading: isLoadingSummary } = useGetItemsSummary();
   const isAtLimit = isNew && (summary?.total ?? 0) >= 10;
 
   const isSaving = createItem.isPending || updateItem.isPending;
+  const isSubmitDisabled = isSaving || isAtLimit || (isNew && isLoadingSummary);
 
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
@@ -319,7 +320,7 @@ export function ItemForm() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSaving || isAtLimit} className="w-full sm:w-auto">
+                <Button type="submit" disabled={isSubmitDisabled} className="w-full sm:w-auto">
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />

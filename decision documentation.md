@@ -405,6 +405,33 @@ Delegate customer lead collection to Tally.so (`https://tally.so/r/lbPjoV`, form
 
 ---
 
+## D-016 — Production review hardening: DST-safe date math, deterministic sorting, and form race mitigation
+
+**Date:** 2026-10-08
+**Status:** Accepted — implemented on `feat/empty-room-onboarding` and `main`
+
+### Context
+
+A staff engineer production code review identified three reliability concerns:
+1. `computeStatus` used `Math.floor(diffMs / 86400000)` on local midnight Date instances. During Daylight Saving Time transitions (23-hour or 25-hour days), this caused off-by-one status shifts.
+2. `itemsRepository.findAll` sorted solely by `expiration_date`. When multiple items share the same expiration date, Postgres returns them in non-deterministic disk order.
+3. `item-form.tsx` evaluated `isAtLimit` against `summary?.total ?? 0`. During initial load of `/demo/items/new`, the submit button rendered enabled for ~200ms before snapping to disabled when the summary response resolved.
+
+### Decision
+
+1. **DST & timezone immunity:** Use pure UTC calendar timestamps (`Date.UTC`) with `Math.round` in `computeStatus` so local server timezone and DST boundaries have zero effect on day count calculations.
+2. **Deterministic ordering:** Add `asc(itemsTable.id)` as a secondary tie-breaker in `orderBy`.
+3. **Form state stability:** Guard `isSubmitDisabled` with `(isNew && isLoadingSummary)` so the form never flashes an enabled submit state before room capacity is verified.
+
+### Affects
+
+- `artifacts/api-server/src/lib/status.ts`
+- `artifacts/api-server/src/repositories/items.repository.ts`
+- `artifacts/expiry-tracker/src/pages/item-form.tsx`
+- `decision documentation.md` (this entry)
+
+---
+
 ## Rejected and superseded
 
 - **`SEED_SAMPLE_DATA` feature flag.** Superseded by D-002. Rejected because a flag is a way to forget, and the failure mode is silent data loss for the person who clicks the button.
