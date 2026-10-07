@@ -432,6 +432,69 @@ A staff engineer production code review identified three reliability concerns:
 
 ---
 
+## D-017 — Interactive & skippable onboarding walkthrough
+
+**Date:** 2026-10-08
+**Status:** Accepted — implemented on `feat/empty-room-onboarding` and `main`
+
+### Context
+
+When automatic room seeding was removed (D-001), cold visitors arrived at an empty screen. The initial `FirstRunEmpty` component presented static explanatory text and a single CTA. User feedback showed that static onboarding text lacked engagement and did not clearly convey the product's dynamic status calculation behavior.
+
+### Decision
+
+1. **3-Step Interactive Walkthrough:** Transform `FirstRunEmpty` into an interactive stepper:
+   - **Step 1:** Clickable item presets (*Passport*, *Car Insurance*, *Domain Name*, *Streaming*) that update a simulated live item card preview.
+   - **Step 2:** Interactive status explorer (*Active*, *Expiring Soon*, *Expired*) explaining continuous, non-stale background calculations.
+   - **Step 3:** Actionable choice between loading 4 sample items and creating a custom item.
+2. **Skippable & Recoverable:** Add a clear "Skip tutorial" action that collapses the tour into a clean empty room state. Persist the dismissal in `sessionStorage` (`expiryos_tutorial_skipped`) while providing an instant "Show interactive tour" reactivation link.
+
+### Affects
+
+- `artifacts/expiry-tracker/src/components/first-run/first-run-empty.tsx`
+- `artifacts/expiry-tracker/src/pages/dashboard.tsx`
+- `artifacts/expiry-tracker/src/pages/items-list.tsx`
+- `decision documentation.md` (this entry)
+
+---
+
+## D-018 — Multi-touchpoint early access elevation, calendar layout stabilization, and category chips
+
+**Date:** 2026-10-08
+**Status:** Accepted — implemented on `feat/empty-room-onboarding` and `main`
+
+### Context
+
+User feedback highlighted four UX/UI pain points:
+1. The early access list link was muted, hard to locate, and buried in the desktop sidebar footer.
+2. The desktop sidebar bottom displayed a duplicate "Add Item" button that created visual clutter with the primary "Add Item" button in `/demo/items`.
+3. The calendar date-picker popover in `item-form.tsx` experienced table width collapse, squishing weekday headers (`SuMoTuWeThFrSa`) and date cells into an illegible column.
+4. Item creation required manual typing for common renewal categories (*Documents*, *Subscriptions*, etc.).
+
+### Decision
+
+1. **Elevate Early Access across 5 touchpoints:**
+   - Top demo banner: add a `✨ Get Early Access` pill button visible on every screen.
+   - Desktop sidebar footer: elevate the muted link into a high-visibility callout card.
+   - Mobile tab bar: add a 1-tap Waitlist action item.
+   - Landing page: position `Join Waitlist` as a primary hero action alongside `Start the demo`.
+   - Items list: add a gentle, dismissible milestone banner highlighting upcoming alert delivery.
+2. **Calendar Popover Width & Cell Enforcement:** Enforce `w-[280px]` root width on `Calendar`, dedicated `w-9` weekday header cells, and `h-9 w-9` day buttons with explicit selection/hover states in `calendar.tsx`.
+3. **Category Suggestion Chips:** Provide quick-pick pills (*Documents*, *Subscriptions*, *Insurance*, *Software*, *Warranties*, *Health*) beneath the category input in `item-form.tsx`.
+4. **Desktop Navigation Unification:** Move "Add Item" into the primary sidebar navigation alongside Dashboard and All Items, eliminating the redundant bottom button.
+
+### Affects
+
+- `artifacts/expiry-tracker/src/components/demo-banner.tsx`
+- `artifacts/expiry-tracker/src/components/layout.tsx`
+- `artifacts/expiry-tracker/src/components/ui/calendar.tsx`
+- `artifacts/expiry-tracker/src/pages/item-form.tsx`
+- `artifacts/expiry-tracker/src/pages/items-list.tsx`
+- `artifacts/expiry-tracker/src/pages/landing.tsx`
+- `decision documentation.md` (this entry)
+
+---
+
 ## Rejected and superseded
 
 - **`SEED_SAMPLE_DATA` feature flag.** Superseded by D-002. Rejected because a flag is a way to forget, and the failure mode is silent data loss for the person who clicks the button.

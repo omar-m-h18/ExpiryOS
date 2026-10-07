@@ -98,45 +98,34 @@ Consequences worth knowing:
 middleware. It remains part of the `lib/session.ts` contract and is covered by
 `lib/session.test.ts`.
 
-### Sample data (opt-in only — one path)
-**Rooms are not seeded automatically any more.** A cold visitor now costs zero
-writes instead of eight, which is what protects the free database tier's compute
-budget from visitors who only look and never return.
+### Sample data & interactive onboarding (opt-in only)
+**Rooms are not seeded automatically.** A cold visitor costs zero writes, protecting
+the free database tier's compute budget from visitors who only look and never return.
 
-The example roster still exists in `artifacts/api-server/src/seed/` and is written
-by exactly one call site: `POST /api/session/reset`, which is now wired to the
-empty state's "show me examples" button (`components/first-run/first-run-empty.tsx`).
-That button only renders when the room holds zero items, so it can never destroy
-a visitor's real data.
+Empty rooms feature an **interactive 3-step onboarding walkthrough**
+(`components/first-run/first-run-empty.tsx`) with preset item previews, automated status
+calculation demonstrations, and a clear choice between loading sample items and creating a
+custom item. Visitors can skip the tutorial at any time; dismissal state is saved in
+`sessionStorage` (`expiryos_tutorial_skipped`) with a one-click option to replay the tour.
 
-Seeding is still idempotent, because the reset endpoint can be called repeatedly:
+The 4-item example roster lives in `artifacts/api-server/src/seed/` and is written by
+`POST /api/session/reset`, triggered by "Load 4 sample items" on the empty room screen.
+That button only renders when the room holds zero items, so it can never destroy real items.
 
-- A fast unlocked `SELECT … LIMIT 1` avoids opening a transaction when the room
-  already holds something.
-- Then a transaction-scoped `pg_advisory_xact_lock(hashtext(ownerId))` plus an
-  in-transaction re-check, so two API replicas cannot each insert a room's rows.
-  The in-memory in-flight map only dedupes within one process; the advisory lock
-  is what makes it correct across replicas.
+Seeding is idempotent:
+- A fast unlocked `SELECT … LIMIT 1` avoids opening a transaction when the room already holds items.
+- A transaction-scoped `pg_advisory_xact_lock(hashtext(ownerId))` plus in-transaction re-check prevents race conditions across API replicas.
 
-> **Removed behaviour:** the middleware used to await the seed and clear the room
-> cookie if seeding failed ("self-heal"). Both are gone. Nothing writes on the
-> request path any more, so there is nothing to fail and nothing to retry.
-
-> **API vs web deploy are independent.** The API auto-deploys from `main` (Render
-> git integration), but the web bundle deploys from GitHub Actions. A change to
-> server code can therefore be live while the frontend is still an old build.
-
-### Abuse limits (all env-tunable)
-The demo is anonymous, so every request can persist rows. Bounds live in
-`config/index.ts` and are documented in `.env.example`:
+### Abuse limits & waitlist
+Bounds live in `config/index.ts` and are documented in `.env.example`:
 
 | Limit | Default | Enforced by |
 |---|---|---|
-| Items per room | 100 | `POST /items` → `409` |
+| Items per room | 10 | `POST /items` → `409` (`MAX_ITEMS_PER_OWNER`), with UI quota banner |
 | Requests/IP/window across `/api` | 300 | global limiter in `app.ts` |
-| Waitlist signups/IP/window | 5 | `routes/leads.ts` |
 | Session resets/IP/window | 10 | `routes/session.ts` |
 | Item creations/IP/window | 60 | `routes/items.ts` |
+| Early access waitlist | N/A | Delegated to Tally.so modal (`lib/tally.ts`, form `lbPjoV`) |
 
 > **Gotcha:** the limiter keeps counters **in process memory**. Behind multiple
 > API replicas the effective limit is `max × replicas`. Move the counters to a
@@ -418,6 +407,19 @@ red.
 - **Search is debounced** (300 ms, `hooks/use-debounced-value.ts`) and LIKE
   metacharacters are escaped server-side. Both exist because each request is an
   unindexed `%term%` scan.
+- **Calendar popover width & cell sizing:** `components/ui/calendar.tsx` explicitly
+  defines a `w-[280px]` root with `w-9` weekday headers and `h-9 w-9` day buttons.
+  Without this, `react-day-picker` inside a zero-padding popover collapses its table
+  width to `min-content`, squishing weekday names into unreadable columns.
+- **Category quick-pick suggestions:** `pages/item-form.tsx` renders suggestion
+  pills (*Documents*, *Subscriptions*, *Insurance*, *Software*, *Warranties*, *Health*)
+  under the category input to accelerate entry without restricting custom values.
+- **Tutorial dismissal persistence:** The interactive onboarding in `first-run-empty.tsx`
+  stores its skipped state in `sessionStorage` (`expiryos_tutorial_skipped`), so navigating
+  between `/demo` and `/demo/items` remembers user dismissal while retaining a replay link.
+- **Multi-surface early access integration:** Tally waitlist popup triggers (`lib/tally.ts`,
+  modal form `lbPjoV`) are placed across the top demo banner, desktop sidebar footer card,
+  mobile bottom tab bar, landing page hero, and an in-app list milestone callout.
 - **Stale historical reports:** `CI_INCIDENT_LOG.md`,
   `DELETE_BUTTON_INVESTIGATION.md`, and `IMPLEMENTATION_PLAN.md` are
   point-in-time records kept for history; they may describe superseded states.

@@ -7,7 +7,36 @@ This project follows [Semantic Versioning](https://semver.org/) and
 
 ---
 
-## [Unreleased] — Security, resilience & correctness hardening
+## [Unreleased] — Interactive Onboarding, Early Access Polish, Calendar Layout & Form UX
+
+> Scope: First-run user experience, waitlist discoverability, UI/UX ergonomics,
+> calendar popover layout stabilization, and category quick-picks.
+
+### Added
+- **Interactive & skippable onboarding tour** (`components/first-run/first-run-empty.tsx`):
+  - 3-step interactive stepper replacing static text cards.
+  - Step 1: Interactive item presets (*Passport*, *Car Insurance*, *Domain Name*, *Streaming*) with a live card preview demonstrating how expiry dates and badges are rendered.
+  - Step 2: Interactive status calculation explorer demonstrating how *Active*, *Expiring Soon*, and *Expired* states calculate continuously without manual user intervention.
+  - Step 3: Immediate actionable path: load 4 sample items into the session or create a custom item.
+  - Skippable at any time with a clean header action; dismissed state persists across pages in `sessionStorage` (`expiryos_tutorial_skipped`) with a one-click option to replay the tour.
+- **High-visibility Early Access triggers** across 5 touchpoints:
+  - Top demo banner (`components/demo-banner.tsx`): sleek `✨ Get Early Access` pill button visible across all demo pages.
+  - Desktop sidebar footer (`components/layout.tsx`): elevated, high-contrast Early Access card highlighting automated reminders.
+  - Mobile bottom navigation (`components/layout.tsx`): 1-tap Waitlist action in the tab bar.
+  - Landing hero (`pages/landing.tsx`): elevated `Join Waitlist` as a primary hero action alongside `Start the demo`.
+  - Item list milestone callout (`pages/items-list.tsx`): dismissible gentle banner at the bottom of tracked items explaining upcoming email & WhatsApp alerts.
+- **Category suggestion chips** (`pages/item-form.tsx`): quick-pick pills (*Documents*, *Subscriptions*, *Insurance*, *Software*, *Warranties*, *Health*) beneath the category input for frictionless item creation.
+
+### Changed
+- **Desktop navigation cleanup** (`components/layout.tsx`): unified "Add Item" into the primary sidebar navigation alongside Dashboard and All Items, eliminating redundant button clutter at the bottom of the sidebar.
+- **Demo banner polish** (`components/demo-banner.tsx`): enhanced responsive layout and added early access CTA next to the 10-item session counter.
+
+### Fixed
+- **Calendar popover layout collapse** (`components/ui/calendar.tsx`): fixed an issue where `react-day-picker` inside a zero-padding popover lacked width constraints, collapsing weekday headers (`SuMoTuWeThFrSa`) and date cells into an illegible squished column. Added fixed `w-[280px]` container styling, dedicated `w-9` weekday header cells, and `h-9 w-9` day buttons with clear active selection styling.
+
+---
+
+## [1.2.0] — 2026-10-08 — Security, resilience & correctness hardening
 
 > Scope: a production code review of the API, database layer, and SPA. The
 > headline work is making the anonymous-session cookie unforgeable, bounding

@@ -16,12 +16,14 @@ ExpiryOS provides a single place to manage these records and automatically ident
 - **Automatic status** — items are classified as *Active*, *Expiring Soon* (within 30 days), or *Expired* in real time — no background jobs needed
 - **Dashboard** — summary counts, "Needs Attention" list sorted by urgency, and an "Expiring This Week" spotlight
 - **Search & filter** — search by name or category; filter by status with one-tap pill buttons
+- **Category quick-picks** — suggestion chips (*Documents*, *Subscriptions*, *Insurance*, *Software*, *Warranties*, *Health*) for rapid item entry
+- **Interactive & skippable tutorial** — 3-step walkthrough on empty rooms with live preset previews, status calculation explorer, and persistent dismissal
+- **On-demand sample items** — load 4 realistic example items into the temporary sandbox with one click
 - **Light / dark mode** — with system-preference detection and `localStorage` persistence
 - **Mobile-first** — responsive layout with a bottom tab bar on mobile; sidebar on desktop
 - **OpenAPI-first** — single source of truth in `lib/api-spec/openapi.yaml`; client hooks and Zod schemas are code-generated
 - **Private per-visitor demo** — each visitor gets their own ephemeral room with no sign-up; data is isolated to that visitor and disappears when the browser closes
-- **Auto-seeded sample data** — a brand-new room is populated with realistic, today-relative sample items so the demo is never empty
-- **Early-bird waitlist** — submit an email to join a self-hosted waitlist (no third-party marketing service)
+- **Early access waitlist** — one-tap Tally modal integration across banner, sidebar, mobile navigation, and landing page
 
 ---
 
@@ -30,18 +32,19 @@ ExpiryOS provides a single place to manage these records and automatically ident
 ExpiryOS is a **private, anonymous demo**: no accounts, no sign-up. Every
 visitor gets their own ephemeral "room":
 
-- A per-visitor `HttpOnly` session cookie (`expiryos_demo`) maps to a random
+- A per-visitor signed `HttpOnly` session cookie (`expiryos_demo`) maps to a random
   `ownerId`; the `requireSession` middleware attaches it to every request.
 - All items are scoped to that `ownerId` — **no visitor can see or modify
   another visitor's data**.
 - The room is temporary: because the cookie has no expiry, it disappears when
   the browser (or a private window) closes. A fresh visit gets a clean room.
-- A brand-new room is automatically seeded with realistic, today-relative
-  sample items so the dashboard is never empty. There is no in-app reset
-  control; the server-side `POST /api/session/reset` endpoint exists but is not
-  currently wired to the UI.
-- A self-hosted **early-bird waitlist** (`POST /api/leads`) captures emails for
-  launch announcements — no third-party marketing service.
+- New rooms start empty with an **interactive 3-step tutorial** explaining the
+  app. Visitors can load 4 sample items on demand via `POST /api/session/reset`
+  or start tracking immediately.
+- A private session quota of **10 items** (`MAX_ITEMS_PER_OWNER`) protects
+  database capacity with live banner feedback.
+- Customer interest is captured via an **early access list** powered by a
+  privacy-respecting Tally.so modal popup.
 
 ---
 
