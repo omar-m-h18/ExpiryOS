@@ -49,3 +49,4 @@ export function openTallyWaitlist(): void {
     window.open(TALLY_URL, "_blank", "noopener,noreferrer");
   }
 }
+

@@ -388,9 +388,15 @@ Delegate customer lead collection to Tally.so (`https://tally.so/r/lbPjoV`, form
 3. **Placements:**
    - Landing page: Replaces the custom email form with a clean "Join Early Access List" card.
    - App sidebar: Provides a subtle "Early Access List" trigger so users exploring the demo can sign up without returning to the landing page.
+4. **Backend cleanup:** Completely remove `POST /api/leads`, `leads.repository.ts`, `RATE_LIMIT_MAX_LEADS`, and `demo.ts` helper so zero waitlist requests ever write to the Neon database.
 
 ### Affects
 
+- `artifacts/api-server/src/routes/index.ts`
+- `artifacts/api-server/src/routes/leads.ts` (deleted)
+- `artifacts/api-server/src/repositories/leads.repository.ts` (deleted)
+- `artifacts/api-server/src/config/index.ts`
+- `artifacts/expiry-tracker/src/lib/demo.ts` (deleted)
 - `artifacts/expiry-tracker/index.html`
 - `artifacts/expiry-tracker/src/lib/tally.ts`
 - `artifacts/expiry-tracker/src/pages/landing.tsx`

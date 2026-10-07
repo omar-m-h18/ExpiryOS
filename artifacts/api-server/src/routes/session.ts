@@ -24,8 +24,8 @@ import { RATE_LIMIT_MAX_RESET, RATE_LIMIT_WINDOW_MS } from "../config";
 const router: IRouter = Router();
 
 /**
- * Resetting deletes the old room's rows and inserts eight example rows into a
- * brand-new room, so each call is a delete plus eight inserts. Cap it per IP.
+ * Resetting deletes the old room's rows and inserts four example rows into a
+ * brand-new room, so each call is a delete plus four inserts. Cap it per IP.
  */
 const resetLimiter = createRateLimiter({
   windowMs: RATE_LIMIT_WINDOW_MS,

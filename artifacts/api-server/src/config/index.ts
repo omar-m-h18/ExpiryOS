@@ -67,14 +67,6 @@ export const RATE_LIMIT_WINDOW_MS = positiveInt(process.env.RATE_LIMIT_WINDOW_MS
 export const RATE_LIMIT_MAX_GLOBAL = positiveInt(process.env.RATE_LIMIT_MAX_GLOBAL, 300);
 
 /**
- * Max waitlist signups per IP per window. The endpoint is public and writes a
- * permanent row, so it is deliberately tight.
- * Controlled by the RATE_LIMIT_MAX_LEADS environment variable.
- * @default 5
- */
-export const RATE_LIMIT_MAX_LEADS = positiveInt(process.env.RATE_LIMIT_MAX_LEADS, 5);
-
-/**
  * Max demo-session resets per IP per window.
  * Controlled by the RATE_LIMIT_MAX_RESET environment variable.
  * @default 10
