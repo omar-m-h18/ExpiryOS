@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, List, PlusCircle } from "lucide-react";
+import { LayoutDashboard, List, PlusCircle, Sparkles } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DemoBanner } from "@/components/demo-banner";
+import { TALLY_FORM_ID, openTallyWaitlist } from "@/lib/tally";
 import { cn } from "@/lib/utils";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -49,6 +50,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="p-6 space-y-2">
+          <button
+            type="button"
+            data-tally-open={TALLY_FORM_ID}
+            data-tally-layout="modal"
+            data-tally-width="540"
+            data-tally-emoji-text="👋"
+            data-tally-emoji-animation="wave"
+            onClick={openTallyWaitlist}
+            className="flex items-center gap-2 justify-center w-full px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md border border-border/80 hover:bg-muted/50 cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span>Early Access List</span>
+          </button>
           <ThemeToggle showLabel className="w-full" />
           <Link
             href="/demo/items/new"

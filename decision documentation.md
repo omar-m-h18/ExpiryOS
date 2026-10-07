@@ -370,6 +370,35 @@ The "Confirm the live site" step will still fail if auto-publishing is off, beca
 
 ---
 
+## D-015 — Customer email collection delegated to Tally.so popup modal
+
+**Date:** 2026-10-08
+**Status:** Accepted — implemented on `feat/empty-room-onboarding`
+
+### Context
+
+The demo application previously contained an inline form posting email strings to `POST /api/leads`. This added unnecessary maintenance overhead (Neon DB storage, rate limiting, and zero anti-spam or qualification questions).
+
+### Decision
+
+Delegate customer lead collection to Tally.so (`https://tally.so/r/lbPjoV`, form ID `lbPjoV`):
+
+1. **Popup widget:** Include Tally's `embed.js` script in `index.html`.
+2. **Helper with fallback:** `src/lib/tally.ts` triggers `window.Tally.openPopup("lbPjoV", ...)` with modal width 540 and wave emoji, falling back to a direct tab redirect if the widget is blocked.
+3. **Placements:**
+   - Landing page: Replaces the custom email form with a clean "Join Early Access List" card.
+   - App sidebar: Provides a subtle "Early Access List" trigger so users exploring the demo can sign up without returning to the landing page.
+
+### Affects
+
+- `artifacts/expiry-tracker/index.html`
+- `artifacts/expiry-tracker/src/lib/tally.ts`
+- `artifacts/expiry-tracker/src/pages/landing.tsx`
+- `artifacts/expiry-tracker/src/components/layout.tsx`
+- `decision documentation.md` (this entry)
+
+---
+
 ## Rejected and superseded
 
 - **`SEED_SAMPLE_DATA` feature flag.** Superseded by D-002. Rejected because a flag is a way to forget, and the failure mode is silent data loss for the person who clicks the button.
