@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   push:
@@ -113,8 +113,13 @@ jobs:
           publish-dir: artifacts/expiry-tracker/dist/public
           deploy-message: "Deploy from GitHub Actions (main)"
           production-deploy: true
-          enable-commit-comment: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Commit comments, deployment records, and commit statuses all require
+          # permissions the GITHUB_TOKEN does not have by default (contents=read,
+          # metadata=read only). Enabling any of these produces 403 errors from
+          # the GitHub API and fails the step. Keep them off.
+          enable-commit-comment: false
+          enable-commit-status: false
+          enable-pull-request-comment: false
           # MUST stay true. This action's default is `false`, which makes it
           # log "Netlify credentials not provided, not deployable" and exit 0 —
           # a green checkmark for a deploy that never happened. That is how an
@@ -127,14 +132,19 @@ jobs:
       # Proves the deploy reached expiryos.netlify.app AND that the site is now
       # serving the exact bundle this run produced.
       #
-      # The earlier smoke check only asked "is the site up?", which the stale
-      # bundle also answers yes to — that is how a broken deploy passed. This
-      # step reads the bundle filename out of both index.html files and
-      # compares them. A mismatch means the deploy landed on a different
-      # Netlify site than the one serving this domain.
+      # NOTE: This step will always fail when Netlify's "Auto publishing" is
+      # disabled in the Netlify dashboard — because Netlify accepts the upload
+      # but does not swap the live domain to it. If you keep auto-publishing
+      # off and publish manually via the Netlify UI, remove or comment out this
+      # step. See D-013 in "decision documentation.md".
       - name: Confirm the live site runs the new build
         run: |
           set -euo pipefail
+
+          # Allow Netlify's edge CDN up to 10 seconds to flush and propagate the
+          # new deploy before reading the live index.html. Without this, the curl
+          # below can race the CDN and still see the old bundle name.
+          sleep 10
 
           built=$(grep -o '/assets/index-[A-Za-z0-9_-]*\.js' \
             artifacts/expiry-tracker/dist/public/index.html | head -n 1 || true)

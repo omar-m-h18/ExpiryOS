@@ -304,6 +304,42 @@ Two different costs are being confused. **Writing** rows consumes compute, which
 
 ---
 
+## D-013 — Tutorial not showing: two-cause root analysis
+
+**Date:** 2026-10-07
+**Status:** Accepted — CI fix implemented, deploy unblocked by manual Netlify publish
+
+### Context
+
+The `FirstRunEmpty` tutorial component was reported as invisible. Investigation found two separate causes, each sufficient to hide it on its own.
+
+### Cause 1: Wrong bundle on the live site (blocking)
+
+The live site `expiryos.netlify.app` continued to serve `index-C2cMtcLG.js` (August 2026). The new bundle `index-DRfr193c.js` — which contains `FirstRunEmpty` — was uploaded by GitHub Actions to Netlify but was never promoted to production because **Netlify "Auto publishing" is disabled**.
+
+This is intentional (owner is on the free tier and wants to keep Netlify build minutes at zero). The workflow is: GitHub Actions builds and uploads → owner manually clicks "Publish deploy" in the Netlify dashboard → live site updates. This step was missed after the last CI run.
+
+### Cause 2: Existing seeded rooms (masking, non-blocking for new visitors)
+
+`useRoomIsEmpty` reads `summary.total` from `GET /api/items/summary`. For visitors who first arrived before D-001 was deployed, their stored room already contains 8 rows. `summary.total` is 8, not 0, so `isRoomEmpty` is `false` and `FirstRunEmpty` never renders, even after the new bundle ships.
+
+This is not a bug. Those returning visitors have already seen the product. New visitors get an empty room and see the tutorial. Cleaning up pre-D-001 rooms is the job of the scheduled cleanup (D-012, not yet built).
+
+### CI fix applied
+
+`nwtgck/actions-netlify@v3` was configured with `enable-commit-comment: true` and a `github-token`. The Actions `GITHUB_TOKEN` only has `contents: read` and `metadata: read`, so the action threw three 403 errors when it tried to write commit comments, deployment records, and commit statuses. These are cosmetic features and do not affect whether the deploy reaches Netlify. They are now set to `false` and `github-token` is removed.
+
+A 10-second `sleep` was added before the bundle-comparison check so the Netlify edge CDN has time to flush before `curl` reads `index.html`.
+
+The "Confirm the live site" step will still fail if auto-publishing is off, because Netlify accepts the upload but does not swap the live domain. That step now carries a comment explaining this and directing to this decision.
+
+### Affects
+
+- `.github/workflows/ci.yml`
+- `decision documentation.md` (this entry)
+
+---
+
 ## Rejected and superseded
 
 - **`SEED_SAMPLE_DATA` feature flag.** Superseded by D-002. Rejected because a flag is a way to forget, and the failure mode is silent data loss for the person who clicks the button.
