@@ -36,7 +36,7 @@ const STEPS: ReadonlyArray<{ title: string; body: string }> = [
   },
   {
     title: "See what needs attention first",
-    body: "The overview puts anything expiring this week at the top, so nothing slips past.",
+    body: "The overview prioritizes overdue items and renewals coming due soon, so nothing slips past.",
   },
 ];
 
@@ -53,8 +53,9 @@ export function FirstRunEmpty() {
         queryClient.invalidateQueries();
         toast({ title: "Example items added" });
       },
-      onError: () => {
-        toast({ title: "Could not add examples", variant: "destructive" });
+      onError: (err) => {
+        const msg = err instanceof Error ? err.message : "Could not add examples";
+        toast({ title: msg, variant: "destructive" });
       },
     });
   };

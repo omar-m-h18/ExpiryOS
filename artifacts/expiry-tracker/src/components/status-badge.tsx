@@ -15,35 +15,46 @@ const ACTIVE_COUNTDOWN_MAX_DAYS = 60;
 
 export function StatusBadge({ status, daysRemaining }: { status: Status; daysRemaining?: number | null }) {
   switch (status) {
-    case "expired":
+    case "expired": {
+      const absDays = daysRemaining !== undefined && daysRemaining !== null ? Math.abs(daysRemaining) : null;
+      const label =
+        daysRemaining !== undefined && daysRemaining !== null && daysRemaining < 0
+          ? `${absDays} ${absDays === 1 ? "day" : "days"} overdue`
+          : "Expired today";
       return (
         <Badge variant="destructive" className="gap-1.5 px-2.5 py-0.5 font-medium text-xs tracking-tight shrink-0">
           <AlertCircle className="w-3 h-3" />
-          {daysRemaining !== undefined && daysRemaining !== null && daysRemaining < 0
-            ? `${Math.abs(daysRemaining)} days overdue`
-            : "Expired today"}
+          {label}
         </Badge>
       );
-    case "expiring_soon":
+    }
+    case "expiring_soon": {
+      const label =
+        daysRemaining !== undefined && daysRemaining !== null
+          ? `${daysRemaining} ${daysRemaining === 1 ? "day" : "days"} left`
+          : "Expiring soon";
       return (
         <Badge variant="warning" className="gap-1.5 px-2.5 py-0.5 font-medium text-xs tracking-tight shrink-0">
           <Clock className="w-3 h-3" />
-          {daysRemaining !== undefined && daysRemaining !== null
-            ? `${daysRemaining} days left`
-            : "Expiring soon"}
+          {label}
         </Badge>
       );
-    case "active":
+    }
+    case "active": {
+      const showCountdown =
+        typeof daysRemaining === "number" &&
+        Number.isFinite(daysRemaining) &&
+        daysRemaining <= ACTIVE_COUNTDOWN_MAX_DAYS;
+      const label = showCountdown
+        ? `${daysRemaining} ${daysRemaining === 1 ? "day" : "days"} left`
+        : "Active";
       return (
         <Badge variant="active" className="gap-1.5 px-2.5 py-0.5 font-medium text-xs tracking-tight shrink-0 bg-success/10 text-success border border-success/20">
           <CheckCircle2 className="w-3 h-3" />
-          {typeof daysRemaining === "number" &&
-          Number.isFinite(daysRemaining) &&
-          daysRemaining <= ACTIVE_COUNTDOWN_MAX_DAYS
-            ? `${daysRemaining} days left`
-            : "Active"}
+          {label}
         </Badge>
       );
+    }
     default:
       return null;
   }

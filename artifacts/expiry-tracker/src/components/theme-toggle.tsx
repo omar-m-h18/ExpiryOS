@@ -10,7 +10,7 @@ interface ThemeToggleProps {
 export function ThemeToggle({ className, showLabel }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
-  const label = isDark ? "Light" : "Dark";
+  const label = isDark ? "Switch to Light" : "Switch to Dark";
 
   return (
     <button

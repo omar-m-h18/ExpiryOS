@@ -15,7 +15,7 @@ import { formatDate, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useItemFilters } from "@/hooks/use-item-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import { Search, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, Trash2, ArrowUp, ArrowDown, AlertCircle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,7 +37,7 @@ export function ItemsList() {
   // key and fires a request, and each request is an unindexed `%term%` scan.
   const debouncedSearch = useDebouncedValue(search);
 
-  const { data: items, isLoading } = useListItems({
+  const { data: items, isLoading, isError, refetch } = useListItems({
     search: debouncedSearch || undefined,
     status: status !== "all" ? status : undefined,
     sort
@@ -213,6 +213,21 @@ export function ItemsList() {
               </div>
             </Card>
           ))
+        ) : isError ? (
+          <Card className="p-10 sm:p-12 flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-3">
+              <AlertCircle className="w-6 h-6 text-destructive" />
+            </div>
+            <h3 className="text-lg sm:text-xl font-display font-semibold tracking-tight text-foreground mb-1">
+              Failed to load items
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-6 max-w-sm mx-auto leading-relaxed">
+              Could not retrieve your tracked items. Please check your connection and try again.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              Try Again
+            </Button>
+          </Card>
         ) : isRoomEmpty && !hasActiveFilters ? (
           /* The room genuinely holds nothing, so explain the product instead of
              showing a bare "no results" card. Never shown while a filter is

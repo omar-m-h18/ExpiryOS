@@ -34,12 +34,21 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const itemSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  category: z.string().optional(),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(200, "Title must be at most 200 characters"),
+  category: z
+    .string()
+    .max(100, "Category must be at most 100 characters")
+    .optional(),
   expiration_date: z.string().min(1, "Expiration date is required").refine(val => {
     return !isNaN(Date.parse(val));
   }, "Invalid date format"),
-  notes: z.string().optional(),
+  notes: z
+    .string()
+    .max(5000, "Notes must be at most 5,000 characters")
+    .optional(),
 });
 
 type ItemFormValues = z.infer<typeof itemSchema>;
@@ -55,7 +64,7 @@ export function ItemForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: item, isLoading: isLoadingItem, isError: isItemError } = useGetItem(itemId, {
+  const { data: item, isLoading: isLoadingItem, isError: isItemError, error: itemError, refetch: refetchItem } = useGetItem(itemId, {
     query: {
       enabled: !isNew && !!itemId,
       queryKey: getGetItemQueryKey(itemId)
@@ -132,6 +141,7 @@ export function ItemForm() {
   };
 
   if (!isNew && isItemError) {
+    const isNotFound = itemError instanceof Error && itemError.message.toLowerCase().includes("not found");
     return (
       <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-300">
         <Button
@@ -148,14 +158,24 @@ export function ItemForm() {
             <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-1">
               <AlertCircle className="w-6 h-6 text-destructive" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-display font-semibold text-foreground">Item not found</h1>
+            <h1 className="text-xl sm:text-2xl font-display font-semibold text-foreground">
+              {isNotFound ? "Item not found" : "Failed to load item"}
+            </h1>
             <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
-              This item may have been deleted, or it belongs to a different demo
-              session. Head back to your items to pick another.
+              {isNotFound
+                ? "This item may have been deleted, or it belongs to a different demo session. Head back to your items to pick another."
+                : "We couldn't retrieve the details for this item. Please check your connection and try again."}
             </p>
-            <Button onClick={() => setLocation("/demo/items")} size="sm" className="mt-3">
-              Back to Items
-            </Button>
+            <div className="flex gap-2 mt-3">
+              {!isNotFound && (
+                <Button variant="outline" size="sm" onClick={() => refetchItem()}>
+                  Retry
+                </Button>
+              )}
+              <Button onClick={() => setLocation("/demo/items")} size="sm">
+                Back to Items
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -276,7 +296,7 @@ export function ItemForm() {
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                                 {selectedDate && !isNaN(selectedDate.getTime()) ? (
-                                  <span className="text-foreground font-medium">{format(selectedDate, "dd/MM/yyyy")}</span>
+                                  <span className="text-foreground font-medium">{format(selectedDate, "MMM d, yyyy")}</span>
                                 ) : (
                                   <span>Select expiration date...</span>
                                 )}

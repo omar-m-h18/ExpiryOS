@@ -35,8 +35,7 @@ export function Landing() {
             <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-left leading-relaxed">
               <span className="font-semibold text-foreground">Live demo session.</span>{" "}
-              You get a private sandbox room that resets when you
-              close your browser. No signup needed.
+              You get a private sandbox room with no signup needed. Data is stored in your private session.
             </p>
           </div>
 
@@ -80,7 +79,7 @@ export function Landing() {
       </main>
 
       <footer className="px-6 py-6 text-center text-xs text-muted-foreground/80">
-        ExpiryOS demo — your data is private to this browser and resets on close.
+        ExpiryOS demo — your data is private to this browser session.
       </footer>
     </div>
   );

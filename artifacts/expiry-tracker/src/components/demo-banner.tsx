@@ -34,7 +34,7 @@ export function DemoBanner() {
             </span>
           ) : (
             <span>
-              {" — private sandbox (up to 10 items). Resets when you close your browser."}
+              {" — private sandbox (up to 10 items). Stored in your private session."}
             </span>
           )}
         </span>

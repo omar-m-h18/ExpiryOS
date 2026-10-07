@@ -12,18 +12,19 @@ import { formatDate } from "@/lib/utils";
 import { selectNeedsAttention } from "@/lib/select-needs-attention";
 
 export function Dashboard() {
-  const { data: summary, isLoading: isLoadingSummary } = useGetItemsSummary();
+  const { data: summary, isLoading: isLoadingSummary, isError: isErrorSummary, refetch: refetchSummary } = useGetItemsSummary();
   const { isEmpty: isRoomEmpty } = useRoomIsEmpty();
-  const { data: expiringSoonItems, isLoading: isLoadingExpiring } = useListItems({
+  const { data: expiringSoonItems, isLoading: isLoadingExpiring, isError: isErrorExpiring, refetch: refetchExpiring } = useListItems({
     status: "expiring_soon",
     sort: "asc"
   });
-  const { data: expiredItems, isLoading: isLoadingExpired } = useListItems({
+  const { data: expiredItems, isLoading: isLoadingExpired, isError: isErrorExpired, refetch: refetchExpired } = useListItems({
     status: "expired",
     sort: "desc"
   });
 
   const isLoadingItems = isLoadingExpiring || isLoadingExpired;
+  const isErrorItems = isErrorExpiring || isErrorExpired;
 
   // Selection logic lives in a pure helper because it must NOT mutate the
   // arrays it is given — they are the objects held in the React Query cache,
@@ -75,6 +76,16 @@ export function Dashboard() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      ) : isErrorSummary ? (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-destructive">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>Could not load summary metrics.</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => refetchSummary()} className="h-8 text-xs border-destructive/40 hover:bg-destructive/10">
+            Retry
+          </Button>
         </div>
       ) : summary ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -151,6 +162,27 @@ export function Dashboard() {
                     </div>
                   ))}
                 </div>
+              ) : isErrorItems ? (
+                <div className="p-8 sm:p-10 text-center flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-3">
+                    <AlertCircle className="w-6 h-6 text-destructive" />
+                  </div>
+                  <p className="font-semibold text-foreground text-sm sm:text-base">Unable to check items</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs leading-relaxed">
+                    Failed to retrieve expiring or overdue items. Please check your connection and try again.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      refetchExpiring();
+                      refetchExpired();
+                    }}
+                    className="mt-4"
+                  >
+                    Retry
+                  </Button>
+                </div>
               ) : needsAttentionItems.length > 0 ? (
                 needsAttentionItems.map(item => (
                   <Link key={item.id} href={`/demo/items/${item.id}/edit`} className="block hover:bg-muted/50 transition-colors p-4 group outline-none">
@@ -200,6 +232,20 @@ export function Dashboard() {
                 <div className="space-y-3">
                   <Skeleton className="h-12 w-20 bg-white/15 rounded-lg" />
                   <Skeleton className="h-4 w-44 bg-white/10 rounded" />
+                </div>
+              ) : isErrorSummary ? (
+                <div className="flex flex-col gap-3 py-2">
+                  <p className="text-xs text-primary-foreground/80 leading-relaxed">
+                    Could not load weekly status.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => refetchSummary()}
+                    className="w-full text-xs"
+                  >
+                    Retry
+                  </Button>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
