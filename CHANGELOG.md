@@ -13,11 +13,12 @@ This project follows [Semantic Versioning](https://semver.org/) and
 > calendar popover layout stabilization, and category quick-picks.
 
 ### Added
-- **Interactive & skippable onboarding tour** (`components/first-run/first-run-empty.tsx`):
-  - 3-step interactive stepper replacing static text cards.
-  - Step 1: Interactive item presets (*Passport*, *Car Insurance*, *Domain Name*, *Streaming*) with a live card preview demonstrating how expiry dates and badges are rendered.
-  - Step 2: Interactive status calculation explorer demonstrating how *Active*, *Expiring Soon*, and *Expired* states calculate continuously without manual user intervention.
-  - Step 3: Immediate actionable path: load 4 sample items into the session or create a custom item.
+- **Guided hands-on onboarding tour** (`components/first-run/first-run-empty.tsx`):
+  - 3-step guided walkthrough replacing passive informational cards.
+  - Step 1: Interactive item selection (*Passport*, *Car Insurance*, *Netflix*, *Domain*) with clear visual checkmarks.
+  - Step 2: Interactive renewal timeline scenarios (*In 1 Year*, *In 2 Weeks*, *5 Days Ago*) that dynamically update an interactive item card and status badge in real time to visually explain urgency calculations.
+  - Step 3: Single focused call-to-action ("Add your first item") with core product takeaways.
+  - Concealed sample data button (`SHOW_SAMPLE_BUTTON = false`) per user feedback while preserving underlying handler logic for future review.
   - Skippable at any time with a clean header action; dismissed state persists across pages in `sessionStorage` (`expiryos_tutorial_skipped`) with a one-click option to replay the tour.
 - **High-visibility Early Access triggers** across 5 touchpoints:
   - Top demo banner (`components/demo-banner.tsx`): sleek `✨ Get Early Access` pill button visible across all demo pages.

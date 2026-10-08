@@ -15,8 +15,7 @@ ExpiryOS centralizes renewal tracking and automatically computes item urgency (*
 - **Triage Dashboard** — Aggregated status counters, an urgent "Needs Attention" queue, and an "Expiring This Week" spotlight.
 - **Search & Filter** — Debounced search (title, category) and URL-synchronized status tabs (`all`, `active`, `expiring_soon`, `expired`).
 - **Category Quick-Picks** — Suggested category chips (*Documents*, *Subscriptions*, *Insurance*, *Software*, *Warranties*, *Health*) for fast entry.
-- **Interactive Onboarding** — 3-step skippable walkthrough for empty rooms with live preset simulations and session persistence.
-- **On-Demand Sample Data** — Load 4 representative sample records into an empty room with a single click.
+- **Guided Onboarding** — 3-step hands-on walkthrough with item presets, interactive urgency simulations, and session persistence.
 - **Theme Support** — Light and dark mode with system preference detection and `localStorage` persistence.
 - **Mobile-First Interface** — Responsive desktop sidebar and mobile bottom tab bar navigation.
 - **OpenAPI-First** — Single contract source in `lib/api-spec/openapi.yaml`; client hooks and Zod validation schemas are code-generated.
@@ -32,7 +31,7 @@ The live demo operates as an isolated, multi-tenant sandbox without registration
 - **Signed Session Cookie:** Each visitor receives an `HttpOnly`, `SameSite=Lax` session cookie (`expiryos_demo`) signed via HMAC-SHA256. The signed payload maps directly to an isolated `ownerId`.
 - **Owner Scoping:** All database operations are filtered by `ownerId`. Cross-tenant reads and mutations are rejected at the repository layer.
 - **Ephemeral Lifecycle:** Cookies do not set an expiration date; closing the browser terminates the session.
-- **Zero-Write Cold Start:** New rooms start empty. No database writes occur until a visitor creates an item or requests sample data.
+- **Zero-Write Cold Start:** New rooms start empty. No database writes occur until a visitor creates an item.
 - **Per-Room Quota:** Rooms enforce a strict cap of **10 items** (`MAX_ITEMS_PER_OWNER`). Exceeding the quota returns HTTP 409 and disables creation controls.
 
 ---

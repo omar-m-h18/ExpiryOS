@@ -50,8 +50,7 @@ The application provides these functional capabilities:
 - Search items by title or category with debounced input.
 - Filter items by status with URL query parameters.
 - Provide fast-selection buttons for standard categories.
-- Provide an interactive, skippable walkthrough for an empty room.
-- Add four sample records on demand.
+- Provide an interactive, guided walkthrough for an empty room.
 - Select light mode or dark mode for the display.
 - Adjust the layout for desktop displays and mobile phone displays.
 - Provide an OpenAPI 3.1 specification as the single interface definition.
@@ -199,3 +198,4 @@ If 0 <= daysRemaining <= 30:
 If daysRemaining > 30:
     Status = "active"
 ```
+

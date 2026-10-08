@@ -487,10 +487,34 @@ User feedback highlighted four UX/UI pain points:
 
 - `artifacts/expiry-tracker/src/components/demo-banner.tsx`
 - `artifacts/expiry-tracker/src/components/layout.tsx`
-- `artifacts/expiry-tracker/src/components/ui/calendar.tsx`
 - `artifacts/expiry-tracker/src/pages/item-form.tsx`
 - `artifacts/expiry-tracker/src/pages/items-list.tsx`
 - `artifacts/expiry-tracker/src/pages/landing.tsx`
+- `decision documentation.md` (this entry)
+
+---
+
+## D-019 — Guided Onboarding Simplification & Temporary Sample Button Concealment
+
+**Date:** 2026-10-08
+**Status:** Accepted — implemented on `feat/empty-room-onboarding` and `main`
+
+### Context
+
+1. User feedback reported that the sample data button was unreliable in the live deployment and should be hidden from the UI without scrapping or modifying the backend reset flow.
+2. The initial 3-step tutorial felt overly passive and text-heavy ("showing it and yeah go click"). Visitors need an intuitive, guided experience that walks them through how expiration monitoring works hands-on.
+
+### Decision
+
+1. **Conceal Sample Data Button:** Set `SHOW_SAMPLE_BUTTON = false` in `first-run-empty.tsx`. The underlying `handleShowExamples` handler and `useResetSession` hook remain preserved in code for future enablement.
+2. **Hands-On Guided Onboarding Walkthrough:**
+   - **Step 1 (Choose an Item):** Guided selection between 4 clear item presets (*Passport*, *Car Insurance*, *Netflix*, *example.com*) with visual checkmarks and instant contextual feedback.
+   - **Step 2 (See How It Works):** Interactive date timeframe buttons (*In 1 Year*, *In 2 Weeks*, *5 Days Ago*) that immediately update an interactive item card and status badge in real time to visually explain urgency calculation.
+   - **Step 3 (Start Tracking):** Single high-contrast "Add your first item" CTA paired with three concise product takeaways.
+
+### Affects
+
+- `artifacts/expiry-tracker/src/components/first-run/first-run-empty.tsx`
 - `decision documentation.md` (this entry)
 
 ---
