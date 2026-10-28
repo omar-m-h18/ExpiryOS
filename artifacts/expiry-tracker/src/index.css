@@ -64,10 +64,14 @@
   --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Radius tiers are explicit, not derived from one base value: shape encodes
+     hierarchy. Chips sit tight, inputs are softly rounded, buttons read as
+     distinct controls, and cards/panels get the generous premium curve. */
+  --radius-sm: 0.375rem;  /*  6px — chips, category tags, kbd */
+  --radius-md: 0.625rem;  /* 10px — inputs, textareas, icon buttons, menus */
+  --radius-lg: 0.875rem;  /* 14px — buttons, nav items, callouts, banners */
+  --radius-xl: 1.25rem;   /* 20px — Card surfaces, list rows, icon tiles */
+  --radius-2xl: 1.5rem;   /* 24px — large panels & feature tiles */
 }
 
 :root {
@@ -136,7 +140,9 @@
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   
-  --radius: 0.5rem;
+  /* Base radius stays for the few shadcn internals that compute off it
+     (e.g. `calc(var(--radius) - 5px)` in ui/input-group.tsx). */
+  --radius: 0.625rem;
   
   --shadow-2xs: 0px 2px 0px 0px rgba(0, 0, 0, 0.02);
   --shadow-xs: 0px 2px 0px 0px rgba(0, 0, 0, 0.04);
@@ -262,5 +268,43 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after, .border.active-elevate:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after, .border.active-elevate-2:not(.no-active-interaction-elevate)::after {
     inset: -1px;
+  }
+
+  /* Progressive squircle: a true superellipse curve where the browser supports
+     `corner-shape`, and a plain rounded rectangle everywhere else. Nothing in
+     the markup has to change.
+     The second group matters: the elevation overlays above rely on
+     `border-radius: inherit`, but `corner-shape` is NOT an inherited property.
+     Without this, hover overlays would draw rounded-rect corners on top of a
+     squircle surface and fringe at the edges. */
+  @supports (corner-shape: squircle) {
+    .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl {
+      corner-shape: squircle;
+    }
+    .toggle-elevate::before, .toggle-elevate-2::before,
+    .hover-elevate::after, .active-elevate::after,
+    .hover-elevate-2::after, .active-elevate-2::after {
+      corner-shape: inherit;
+    }
+  }
+}
+
+/* Respect the OS "reduce motion" setting: entrance animations and colour
+   transitions become instant. Kept outside `@layer utilities` so it can
+   override utility-declared durations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Spinners convey loading state, so keep them turning — a frozen spinner
+     reads as a broken UI. */
+  .animate-spin {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
   }
 }
