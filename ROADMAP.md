@@ -201,3 +201,60 @@ pnpm --filter @workspace/expiry-os run dev                # visual pass
 Visual checklist for shape/motion changes: light **and** dark mode; a hover on an
 items-list row (that is where `corner-shape: inherit` either works or does not);
 and the OS "reduce motion" toggle.
+
+---
+
+## Compliance follow-ups
+
+Findings from the legal-compliance audit that are **not** UI work. Ordered by
+risk. Statutory figures are maximums, not expectations; none of this is legal
+advice — have counsel review before launch.
+
+### ✅ Fixed
+
+- **Third-party font CDN (GDPR).** `index.html` and `index.css` loaded DM Sans,
+  Outfit, and an unused Inter from `fonts.googleapis.com`, transmitting every
+  visitor's IP to a US third party before any interaction. Fonts are now
+  self-hosted via `@fontsource/dm-sans` and `@fontsource/outfit` (OFL-1.1) and
+  bundled by Vite. The unused Inter link and both `preconnect` hints were
+  removed.
+- **Tally embed loaded before consent (GDPR / ePrivacy).** The embed script was a
+  static `<script async>` that fired on every page view. It is now injected on
+  first waitlist click (`src/lib/tally.ts`, memoised, 4s timeout, falls back to a
+  new tab). The inert `data-tally-*` attributes were removed from all six CTAs
+  so `onClick` is the single source of truth and cannot double-fire.
+- **No transparency at the collection point (GDPR Art. 13).** Added a purpose and
+  opt-out line directly under the landing CTA.
+- **`notes` field invited sensitive identifiers (GDPR Art. 5(1)(c)).** The
+  placeholder asked for "account numbers"; it now asks for a renewal reference
+  and carries a "don't store passwords, card details, or ID numbers" helper.
+
+### ⬜ Open
+
+- **`/api/leads` is declared but unimplemented.** Documented with warnings in
+  `lib/api-spec/openapi.yaml` and `lib/db/src/schema/leads.ts`. **Do not mount
+  the route** until the table has `consented_at`, `source`, and
+  `unsubscribe_token`. The SPA uses Tally instead.
+- **No privacy policy or terms page.** Nothing links to one; `grep -i privacy`
+  returns nothing. Required before launch — needs legal entity name, contact
+  address, and the sub-processor list (Neon, Render, Netlify, Tally).
+- **No unsubscribe path (CAN-SPAM / GDPR Art. 7(3)).** No email is sent today, so
+  no violation exists yet. Before the first send: signed unsubscribe token,
+  one-click endpoint, postal address in the footer, and honour opt-outs within
+  10 business days.
+- **No retention policy or user-facing erasure (Art. 5(1)(e), Art. 17).**
+  `POST /session/reset` clears a room, but its only UI trigger is behind
+  `SHOW_SAMPLE_BUTTON = false`. Abandoned rooms persist in Neon indefinitely. Add
+  a "Delete my data" action and a scheduled sweep.
+- **No processor agreements / transfer mechanism (Art. 28, Chapter V).** All five
+  vendors are US-hosted. DPAs plus SCCs or the Data Privacy Framework.
+
+### ⛔ Not applicable — do not spend effort
+
+| Item | Why |
+|---|---|
+| Session replay / keystroke logging (CIPA) | Zero analytics, replay, or heatmap libraries exist. No exposure. |
+| Age gate / COPPA | No signup, no accounts, general-audience tool. Add a "13 or older" line to the waitlist form only. |
+| Auto-renewal disclosure / checkout | No payment code. Revisit if billing ships. |
+| Upload content disclaimer | No upload feature exists. |
+| Cookie consent banner | The only cookie is the strictly-necessary `expiryos_demo` session cookie (HttpOnly, SameSite=Lax, Secure in prod). ePrivacy Art. 5(3) exempts it — a banner would be theatre. Document it in the privacy policy instead. |

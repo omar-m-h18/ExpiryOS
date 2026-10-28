@@ -7,6 +7,44 @@ This project follows [Semantic Versioning](https://semver.org/) and
 
 ---
 
+## [Unreleased] — Privacy & Compliance Hardening
+
+> Scope: third-party request elimination, transparency at the point of data
+> collection, and data-minimisation copy. No API, data, or routing changes.
+
+### Added
+- **Self-hosted fonts** (`artifacts/expiry-tracker/src/assets/fonts/`): DM Sans and Outfit
+  are now served from the bundle instead of `fonts.googleapis.com`. The previous setup sent
+  every visitor's IP address and User-Agent to a US third party on page load, before any
+  interaction — the fact pattern behind LG München I 3 O 17493/20. Four variable-font files
+  (latin + latin-ext per family, SIL OFL-1.1) are committed and referenced from `@font-face`
+  rules in `src/index.css`, so Vite fingerprints and serves them same-origin. An unused Inter
+  `<link>` and both `preconnect` hints were removed from `index.html`.
+- **Waitlist disclosure** (`src/pages/landing.tsx`): a purpose and opt-out line now sits
+  directly under the early-access CTA, covering GDPR Art. 13's transparency requirement at
+  the point of collection.
+- **Sensitive-data warning on `notes`** (`src/pages/item-form.tsx`): the field previously
+  asked for "account numbers". It now asks for a renewal reference and carries a helper
+  telling users not to store passwords, card details, or government ID numbers.
+
+### Changed
+- **Tally embed is loaded on demand** (`src/lib/tally.ts`, `index.html`): the embed script was
+  a static `<script async>` that fired on every page view. It is now injected the first time a
+  waitlist CTA is clicked, memoised, with a 4s timeout and a new-tab fallback if the CDN is
+  blocked. The now-inert `data-tally-*` attributes were removed from all six CTAs so `onClick`
+  is the single source of truth and cannot double-fire once the script is present.
+- **No new dependencies:** the fonts are vendored rather than pulled from `@fontsource`, so
+  `pnpm-lock.yaml` is unchanged and CI/Netlify installs stay reproducible.
+
+### Documented
+- **`POST /leads` is declared but unimplemented** — no route file exists and `routes/index.ts`
+  does not mount one, so it 404s while the SPA uses Tally. Warning comments were added to
+  `lib/api-spec/openapi.yaml` and `lib/db/src/schema/leads.ts` naming the columns
+  (`consented_at`, `source`, `unsubscribe_token`) required before it may be wired up.
+  Remaining compliance work is tracked in `ROADMAP.md` → "Compliance follow-ups".
+
+---
+
 ## [Unreleased] — Design System: Shape Tokens & Motion Accessibility
 
 > Scope: visual design tokens, corner geometry, and motion accessibility.

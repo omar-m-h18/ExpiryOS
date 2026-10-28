@@ -447,6 +447,18 @@ red.
   `tw-animate-css` (`animate-in fade-in slide-in-from-bottom-*`) on mount, plus
   staggered `enterDelay()` inline styles in `pages/dashboard.tsx`. Do not assume
   a motion library is wired up.
+- **Never load fonts or embeds from a third-party CDN.** DM Sans and Outfit are
+  vendored under `src/assets/fonts/` and declared with `@font-face` in
+  `index.css`; the Tally embed script is injected on first click by
+  `src/lib/tally.ts` rather than sitting in `index.html`. Both changes exist to
+  stop leaking visitor IPs to US processors before any interaction. Re-adding a
+  `fonts.googleapis.com` link or a static `<script src="...tally.so">` would
+  reintroduce the GDPR problem — see "Compliance follow-ups" in `ROADMAP.md`.
+- **`POST /leads` is deliberately unimplemented.** The endpoint is in the
+  OpenAPI contract, `leads` exists in the DB schema, and `useCreateLead` is
+  generated — but no route is mounted, so it 404s. The SPA collects waitlist
+  emails through Tally. Do not mount it without adding `consented_at`, `source`,
+  and `unsubscribe_token` first.
 - **Stale historical reports:** `CI_INCIDENT_LOG.md`,
   `DELETE_BUTTON_INVESTIGATION.md`, and `IMPLEMENTATION_PLAN.md` are
   point-in-time records kept for history; they may describe superseded states.
