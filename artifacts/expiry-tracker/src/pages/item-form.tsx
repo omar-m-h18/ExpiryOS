@@ -374,11 +374,14 @@ export function ItemForm() {
                     <FormLabel>Notes <span className="text-muted-foreground font-normal">(Optional)</span></FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Add any extra details, account numbers, or links here..." 
+                        placeholder="e.g. Renewal reference, support link, or who to contact..." 
                         className="resize-none min-h-[120px]"
                         {...field} 
                       />
                     </FormControl>
+                    <FormDescription>
+                      Don't store passwords, card details, or government ID numbers — this demo keeps notes unencrypted.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

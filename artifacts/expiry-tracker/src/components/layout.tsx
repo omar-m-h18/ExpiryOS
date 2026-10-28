@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { LayoutDashboard, List, PlusCircle, Sparkles } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DemoBanner } from "@/components/demo-banner";
-import { TALLY_FORM_ID, openTallyWaitlist } from "@/lib/tally";
+import { openTallyWaitlist } from "@/lib/tally";
 import { cn } from "@/lib/utils";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -67,11 +67,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </p>
             <button
               type="button"
-              data-tally-open={TALLY_FORM_ID}
-              data-tally-layout="modal"
-              data-tally-width="540"
-              data-tally-emoji-text="👋"
-              data-tally-emoji-animation="wave"
               onClick={openTallyWaitlist}
               className="w-full h-8 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
             >
@@ -116,11 +111,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         })}
         <button
           type="button"
-          data-tally-open={TALLY_FORM_ID}
-          data-tally-layout="modal"
-          data-tally-width="540"
-          data-tally-emoji-text="👋"
-          data-tally-emoji-animation="wave"
           onClick={openTallyWaitlist}
           className="flex flex-col items-center justify-center gap-1 min-w-[56px] h-full text-muted-foreground hover:text-primary transition-colors cursor-pointer"
         >

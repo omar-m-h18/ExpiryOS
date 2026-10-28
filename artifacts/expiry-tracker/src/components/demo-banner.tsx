@@ -1,6 +1,6 @@
 import { Info, AlertCircle, Sparkles } from "lucide-react";
 import { useGetItemsSummary } from "@workspace/api-client-react";
-import { TALLY_FORM_ID, openTallyWaitlist } from "@/lib/tally";
+import { openTallyWaitlist } from "@/lib/tally";
 
 const DEMO_ITEM_LIMIT = 10;
 
@@ -55,11 +55,6 @@ export function DemoBanner() {
         )}
         <button
           type="button"
-          data-tally-open={TALLY_FORM_ID}
-          data-tally-layout="modal"
-          data-tally-width="540"
-          data-tally-emoji-text="👋"
-          data-tally-emoji-animation="wave"
           onClick={openTallyWaitlist}
           className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-2xs cursor-pointer"
         >

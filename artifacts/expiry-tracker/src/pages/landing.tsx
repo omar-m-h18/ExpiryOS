@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { ArrowRight, Mail, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TALLY_FORM_ID, openTallyWaitlist } from "@/lib/tally";
+import { openTallyWaitlist } from "@/lib/tally";
 
 export function Landing() {
   return (
@@ -52,17 +52,21 @@ export function Landing() {
               variant="outline"
               size="lg"
               className="w-full sm:w-auto h-12 px-6 text-sm font-semibold shadow-2xs gap-2 border-primary/30 hover:bg-primary/5 hover:border-primary/50 text-foreground cursor-pointer"
-              data-tally-open={TALLY_FORM_ID}
-              data-tally-layout="modal"
-              data-tally-width="540"
-              data-tally-emoji-text="👋"
-              data-tally-emoji-animation="wave"
               onClick={openTallyWaitlist}
             >
               <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
               <span>Join Waitlist</span>
             </Button>
           </div>
+
+          {/* Transparency at the point of collection (GDPR Art. 13): state the
+              purpose and the opt-out expectation next to the CTA.
+              TODO(V3): add a Privacy Policy link once the page exists.
+              TODO(V5): "opt out any time" needs the unsubscribe endpoint. */}
+          <p className="text-[11px] text-muted-foreground/90 max-w-sm mx-auto leading-relaxed -mt-3">
+            The waitlist is used only to tell you when early access opens. No
+            marketing lists, and you can opt out at any time.
+          </p>
 
           {/* Tally Early Access / Waitlist feature highlight */}
           <div className="mx-auto max-w-md space-y-2.5 pt-6 border-t border-border/60">
@@ -78,11 +82,6 @@ export function Landing() {
                 variant="outline"
                 size="sm"
                 className="gap-2 h-10 px-5 text-xs font-medium shadow-2xs hover:bg-muted"
-                data-tally-open={TALLY_FORM_ID}
-                data-tally-layout="modal"
-                data-tally-width="540"
-                data-tally-emoji-text="👋"
-                data-tally-emoji-animation="wave"
                 onClick={openTallyWaitlist}
               >
                 <Mail className="w-3.5 h-3.5 text-primary" aria-hidden="true" />

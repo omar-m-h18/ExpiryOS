@@ -13,10 +13,9 @@
     <meta name="twitter:title" content="ExpiryOS" />
     <meta name="twitter:description" content="ExpiryOS — track expiration dates for licenses, subscriptions, documents, and more." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script async src="https://tally.so/widgets/embed.js"></script>
+    <!-- Tally's embed script is intentionally NOT loaded here: a static script
+         tag would send every visitor's IP to Tally before any interaction.
+         It is injected on first waitlist click instead — see src/lib/tally.ts. -->
   </head>
   <body>
     <div id="root"></div>

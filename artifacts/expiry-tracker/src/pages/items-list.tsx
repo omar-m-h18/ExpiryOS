@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useItemFilters } from "@/hooks/use-item-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { Search, Trash2, ArrowUp, ArrowDown, AlertCircle, Sparkles, X } from "lucide-react";
-import { TALLY_FORM_ID, openTallyWaitlist } from "@/lib/tally";
+import { openTallyWaitlist } from "@/lib/tally";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -248,11 +248,6 @@ export function ItemsList() {
                   <Button
                     size="sm"
                     className="h-8 px-3.5 text-xs font-semibold shadow-2xs"
-                    data-tally-open={TALLY_FORM_ID}
-                    data-tally-layout="modal"
-                    data-tally-width="540"
-                    data-tally-emoji-text="👋"
-                    data-tally-emoji-animation="wave"
                     onClick={openTallyWaitlist}
                   >
                     Join Waitlist
