@@ -25,7 +25,7 @@ ExpiryOS — pnpm workspace monorepo: an OpenAPI-first Express 5 API plus a Reac
 - `artifacts/expiry-tracker/` → package `@workspace/expiry-os` (frontend). Docs sometimes call it expiry-os or expiry-tracker.
 - `artifacts/api-server/` → `@workspace/api-server` (Express API).
 - Workspace packages: `lib/db`, `lib/api-spec`, `lib/api-zod`, `lib/api-client-react`, `scripts`.
-- `KNOWLEDGE.md` holds accurate architecture/ops context (anonymous demo, CI, hosting, build-order gotchas). `CONTRIBUTING.md` is marked _under revamping_ — use `README.md` and this file for current commands.
+- `KNOWLEDGE.md` holds accurate architecture/ops context (anonymous demo, CI, hosting, build-order gotchas). `ROADMAP.md` holds planned UI/UX work plus approaches already rejected (with reasons) — check it before proposing design changes. `CONTRIBUTING.md` is marked _under revamping_ — use `README.md` and this file for current commands.
 
 ## Architecture (non-obvious)
 

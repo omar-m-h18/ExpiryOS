@@ -7,6 +7,47 @@ This project follows [Semantic Versioning](https://semver.org/) and
 
 ---
 
+## [Unreleased] — Design System: Shape Tokens & Motion Accessibility
+
+> Scope: visual design tokens, corner geometry, and motion accessibility.
+> No API, data, layout, or routing changes.
+
+### Added
+- **Progressive squircle corners** (`artifacts/expiry-tracker/src/index.css`): `corner-shape: squircle`
+  applied under `@supports` to the `rounded-md` / `rounded-lg` / `rounded-xl` / `rounded-2xl`
+  utilities, so cards, buttons, inputs, and menus render a true superellipse curve in supporting
+  browsers (Chromium 139+) and fall back to a plain rounded rectangle everywhere else. No markup
+  changes were required.
+  The `hover-elevate` / `toggle-elevate` pseudo-overlays also receive `corner-shape: inherit`,
+  because they rely on `border-radius: inherit` and `corner-shape` is **not** an inherited
+  property — without it, hover overlays draw rounded-rect corners over a squircle surface.
+- **Reduced-motion support** (`artifacts/expiry-tracker/src/index.css`): a
+  `prefers-reduced-motion: reduce` block collapses entrance animations and colour transitions
+  to instant. `.animate-spin` is explicitly exempted so the save spinner still conveys
+  loading state instead of appearing frozen.
+
+### Changed
+- **Radius scale is now explicit** (`artifacts/expiry-tracker/src/index.css`): `--radius-sm/md/lg/xl`
+  were previously derived from a single `--radius` base via `calc(var(--radius) ± 4px)`, which
+  produced a 6–12px spread where every surface read at the same softness. They are now distinct
+  tiers, so shape encodes hierarchy:
+
+  | Token | Before | After | Applied to |
+  |---|---|---|---|
+  | `sm` | 4px | 6px | chips, category tags |
+  | `md` | 6px | 10px | inputs, textareas, icon buttons, menus, popovers, toasts |
+  | `lg` | 8px | 14px | buttons, nav items, demo banner, callouts |
+  | `xl` | 12px | 20px | all `Card` surfaces, list rows, icon tiles |
+  | `2xl` | 16px (Tailwind default) | 24px | large panels and feature tiles |
+
+  `2xl` is now defined explicitly: the Overview redesign uses `rounded-2xl` for its panels, and
+  inheriting Tailwind's 16px default would have placed it *below* the new `xl` (20px), inverting
+  the scale. `--radius` is retained (8px → 10px) because `components/ui/input-group.tsx` computes
+  `calc(var(--radius) - 5px)` from it. `rounded-full` is untouched, so status badges and filter
+  pills remain capsules.
+
+---
+
 ## [Unreleased] — Interactive Onboarding, Early Access Polish, Calendar Layout & Form UX
 
 > Scope: First-run user experience, waitlist discoverability, UI/UX ergonomics,

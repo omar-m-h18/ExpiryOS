@@ -18,6 +18,7 @@ ExpiryOS centralizes renewal tracking and automatically computes item urgency (*
 - **Guided Onboarding** — 3-step hands-on walkthrough with item presets, interactive urgency simulations, and session persistence.
 - **Theme Support** — Light and dark mode with system preference detection and `localStorage` persistence.
 - **Mobile-First Interface** — Responsive desktop sidebar and mobile bottom tab bar navigation.
+- **Design System** — Tiered radius scale with progressive squircle corners (`corner-shape`) and a `prefers-reduced-motion` guard.
 - **OpenAPI-First** — Single contract source in `lib/api-spec/openapi.yaml`; client hooks and Zod validation schemas are code-generated.
 - **Private Ephemeral Demo** — HMAC-SHA256 signed session cookies map visitors to isolated rooms. No user accounts required.
 - **Early Access Waitlist** — Embedded modal integration (Tally.so) across banner, navigation, landing, and milestone callouts.
@@ -170,6 +171,7 @@ ExpiryOS/
 ├── .github/workflows/ci.yml     # Automated verification and deployment pipeline
 ├── CHANGELOG.md                 # Semantic versioning release log
 ├── KNOWLEDGE.md                 # Living engineering and architecture record
+├── ROADMAP.md                   # Planned UI/UX work and rejected approaches
 ├── decision documentation.md    # Formal architectural decision records (ADRs)
 └── LICENSE                      # MIT
 ```
@@ -216,6 +218,14 @@ Base path: `/api`
 
 Contract definition: [`lib/api-spec/openapi.yaml`](lib/api-spec/openapi.yaml).  
 Code regeneration command: `pnpm --filter @workspace/api-spec run codegen`.
+
+---
+
+## Roadmap
+
+Planned UI/UX work lives in [`ROADMAP.md`](ROADMAP.md). Shape tokens, squircle
+geometry, and the reduced-motion guard have shipped; the landing-page restructure,
+scroll-driven motion, and dashboard density work remain.
 
 ---
 

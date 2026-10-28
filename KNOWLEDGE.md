@@ -420,6 +420,33 @@ red.
 - **Multi-surface early access integration:** Tally waitlist popup triggers (`lib/tally.ts`,
   modal form `lbPjoV`) are placed across the top demo banner, desktop sidebar footer card,
   mobile bottom tab bar, landing page hero, and an in-app list milestone callout.
+- **Design tokens live in `src/index.css`:** radius tiers are explicit
+  (`--radius-sm` 6px → `--radius-xl` 20px → `--radius-2xl` 24px) rather than
+  derived from one base, so shape encodes hierarchy — chips 6px, inputs 10px,
+  buttons 14px, cards 20px, large panels 24px. `--radius` is still defined
+  (10px) because `components/ui/input-group.tsx` computes
+  `calc(var(--radius) - 5px)` from it. Changing a tier restyles every `Card` at
+  once, since `ui/card.tsx` is the single `rounded-xl` definition. `2xl` is
+  defined explicitly — leaving it at Tailwind's 16px default would put it below
+  `xl` and invert the scale on the dashboard panels that use `rounded-2xl`.
+- **Squircle corners are progressive enhancement:** `corner-shape: squircle` is
+  applied under `@supports` to the `rounded-md/lg/xl/2xl` utilities. Only Chromium
+  139+ renders it; Safari and Firefox get the plain rounded fallback. The
+  `hover-elevate` / `toggle-elevate` pseudo-overlays need `corner-shape: inherit`
+  explicitly, because they rely on `border-radius: inherit` and `corner-shape`
+  is **not** an inherited property — omit it and hovered cards fringe at the
+  corners. Never ship a design that only looks correct with the squircle applied.
+- **Motion respects the OS setting:** a `prefers-reduced-motion: reduce` block at
+  the end of `index.css` (outside `@layer utilities`, so it wins the cascade)
+  collapses entrance animations and transitions to instant. `.animate-spin` is
+  exempted so the save spinner does not appear frozen. Any new animation must
+  degrade to "visible, no transform" under this query. This complements the
+  `motion-safe:` variants used by the Overview redesign, which gate entrance
+  animations but **not** hover `transition-*` utilities.
+- **`framer-motion` is a dependency but is never imported.** All current motion is
+  `tw-animate-css` (`animate-in fade-in slide-in-from-bottom-*`) on mount, plus
+  staggered `enterDelay()` inline styles in `pages/dashboard.tsx`. Do not assume
+  a motion library is wired up.
 - **Stale historical reports:** `CI_INCIDENT_LOG.md`,
   `DELETE_BUTTON_INVESTIGATION.md`, and `IMPLEMENTATION_PLAN.md` are
   point-in-time records kept for history; they may describe superseded states.
